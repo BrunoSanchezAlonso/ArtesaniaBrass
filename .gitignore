@@ -5,8 +5,8 @@ node_modules/
 supabase/.temp/
 
 # Configuración local (no subir claves al repositorio)
-public/js/config/supabase-config.js
-public/js/config/stripe-config.js
+#public/js/config/supabase-config.js
+#public/js/config/stripe-config.js
 
 # Sistema operativo
 .DS_Store
