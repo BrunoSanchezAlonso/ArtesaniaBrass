@@ -53,25 +53,22 @@ function renderProductMeasures(medidas) {
 }
 
 async function loadProducts() {
-    if (isSupabaseConfigured() && supabaseClient) {
-        const { data, error } = await supabaseClient
-            .from("productos")
-            .select("*")
-            .eq("activo", true)
-            .order("id", { ascending: true });
-
-        if (!error && data) {
-            return data;
-        }
-
-        console.warn("No se pudieron cargar productos desde Supabase. Usando datos locales.");
+    if (!isSupabaseConfigured() || !supabaseClient) {
+        return [];
     }
 
-    if (typeof productosLocales !== "undefined") {
-        return productosLocales;
+    const { data, error } = await supabaseClient
+        .from("productos")
+        .select("*")
+        .eq("activo", true)
+        .order("id", { ascending: true });
+
+    if (error) {
+        console.warn("No se pudieron cargar productos desde Supabase.", error);
+        return [];
     }
 
-    return [];
+    return data ?? [];
 }
 
 function getFilteredProducts() {

@@ -15,7 +15,6 @@ ArtesaniaBrass/
 │   ├── js/
 │   │   ├── store.js        # Lógica de la tienda
 │   │   ├── admin.js        # Panel admin
-│   │   ├── productos.js    # Productos locales de respaldo
 │   │   └── config/         # Claves Supabase y Stripe (local)
 │   └── assets/images/      # Imágenes estáticas
 ├── supabase/
