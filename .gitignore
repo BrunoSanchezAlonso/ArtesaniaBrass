@@ -1,0 +1,17 @@
+# Dependencias
+node_modules/
+
+# Supabase CLI (local)
+supabase/.temp/
+
+# Configuración local (no subir claves al repositorio)
+public/js/config/supabase-config.js
+public/js/config/stripe-config.js
+
+# Sistema operativo
+.DS_Store
+Thumbs.db
+
+# Entorno
+.env
+.env.*

@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="css/store.css">
+  <title>Pago completado | ArtesaniaBrass</title>
+</head>
+<body>
+  <main class="checkout-status">
+    <div class="checkout-status-card">
+      <p class="checkout-status-badge success">Pago recibido</p>
+      <h1>¡Gracias por tu compra!</h1>
+      <p id="success-message">
+        Estamos confirmando tu pedido. En unos segundos verás aquí el resumen.
+      </p>
+
+      <div id="order-summary" class="order-summary hidden"></div>
+
+      <a href="index.html" class="primary-button">Volver a la tienda</a>
+    </div>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/config/supabase-config.js"></script>
+  <script>
+    localStorage.removeItem("artesanibrass-cart");
+
+    function formatPrice(amount) {
+      return `${Number(amount).toFixed(2).replace(".", ",")} €`;
+    }
+
+    function formatAddress(address) {
+      if (!address) return "No indicada";
+
+      return [
+        address.line1,
+        address.line2,
+        address.postal_code,
+        address.city,
+        address.state,
+        address.country
+      ].filter(Boolean).join(", ");
+    }
+
+    function renderOrderSummary(order) {
+      const summary = document.getElementById("order-summary");
+      const message = document.getElementById("success-message");
+      const items = order.pedido_items ?? [];
+
+      message.textContent = "Hemos recibido tu pedido correctamente. Te enviaremos un correo de confirmación y prepararemos tu joya artesanal con mucho cariño.";
+
+      summary.innerHTML = `
+        <h2>Resumen del pedido #${order.id}</h2>
+        <p><strong>Total:</strong> ${formatPrice(order.total_amount)}</p>
+        ${order.customer_email ? `<p><strong>Email:</strong> ${order.customer_email}</p>` : ""}
+        <p><strong>Envío:</strong> ${formatAddress(order.shipping_address)}</p>
+        <ul class="order-summary-list">
+          ${items.map((item) => `
+            <li>
+              ${item.nombre}
+              <span>${item.cantidad} × ${formatPrice(item.precio_unitario)}</span>
+            </li>
+          `).join("")}
+        </ul>
+      `;
+
+      summary.classList.remove("hidden");
+    }
+
+    async function confirmOrder() {
+      const params = new URLSearchParams(window.location.search);
+      const sessionId = params.get("session_id");
+
+      if (!sessionId) {
+        console.warn("No se encontró session_id en la URL:", window.location.href);
+        document.getElementById("success-message").textContent =
+          "Hemos recibido tu pago correctamente. En breve recibirás la confirmación por correo.";
+        return;
+      }
+
+      if (!isSupabaseConfigured()) {
+        document.getElementById("success-message").textContent =
+          "Hemos recibido tu pedido correctamente. Te enviaremos un correo de confirmación y prepararemos tu joya artesanal con mucho cariño.";
+        return;
+      }
+
+      try {
+        const response = await fetch(`${SUPABASE_URL}/functions/v1/fulfill-order`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${SUPABASE_ANON_KEY}`
+          },
+          body: JSON.stringify({ sessionId })
+        });
+
+        const data = await response.json();
+
+        if (response.ok && data.order) {
+          renderOrderSummary(data.order);
+          return;
+        }
+
+        console.error("fulfill-order error:", data.error || response.status);
+        document.getElementById("success-message").textContent =
+          data.error
+            ? "Pago recibido. Estamos registrando tu pedido; revisa tu correo en unos minutos."
+            : "Hemos recibido tu pago correctamente. En breve recibirás la confirmación por correo.";
+      } catch (error) {
+        console.error("No se pudo cargar el resumen del pedido:", error);
+        document.getElementById("success-message").textContent =
+          "Hemos recibido tu pago correctamente. En breve recibirás la confirmación por correo.";
+      }
+    }
+
+    confirmOrder();
+  </script>
+</body>
+</html>

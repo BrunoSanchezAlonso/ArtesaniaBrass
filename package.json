@@ -1,0 +1,16 @@
+{
+  "name": "artesaniabrass",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Tienda online de joyería artesanal ArtesaniaBrass",
+  "scripts": {
+    "dev": "npx serve public",
+    "setup:config": "node scripts/setup-config.js",
+    "supabase:link": "npx supabase link --project-ref ejgbmquczzjqnidlkrwb",
+    "supabase:db:push": "npx supabase db push",
+    "supabase:functions:deploy": "npx supabase functions deploy create-checkout-session && npx supabase functions deploy fulfill-order && npx supabase functions deploy stripe-webhook --no-verify-jwt"
+  },
+  "devDependencies": {
+    "supabase": "^2.109.1"
+  }
+}

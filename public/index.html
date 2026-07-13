@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="css/store.css">
+  <title>ArtesaniaBrass | Joyería Artesanal</title>
+</head>
+<body>
+
+  <header>
+    <div class="container navbar">
+      <a href="#" class="logo">
+        <img src="assets/images/logo.png" alt="" class="logo-image">
+        <span class="logo-text">ArtesaniaBrass</span>
+      </a>
+
+      <nav>
+        <ul>
+          <li><a href="#inicio">Inicio</a></li>
+          <li><a href="#categorias">Categorías</a></li>
+          <li><a href="#productos">Productos</a></li>
+          <li><a href="#sobre-nosotros">Sobre nosotros</a></li>
+          <li><a href="#contacto">Contacto</a></li>
+        </ul>
+      </nav>
+
+      <button class="cart-button" onclick="openCart()">
+        Carrito <span id="cart-count">0</span>
+      </button>
+    </div>
+  </header>
+
+  <section class="hero" id="inicio">
+    <div class="container hero-content">
+      <h1>Joyería artesanal en bronce y latón</h1>
+      <p>Hecha a mano por Rosa Alonso</p>
+      <a href="#productos" class="primary-button">Ver colección</a>
+    </div>
+  </section>
+
+  <section id="categorias">
+    <div class="container">
+      <h2>Categorías</h2>
+
+      <div class="categories-grid">
+        <div class="category-card" data-categoria="Pendientes" role="button" tabindex="0">
+          <img src="assets/images/pendientes.png" alt="Pendientes artesanales" class="category-image">
+          <h3>Pendientes</h3>
+        </div>
+
+        <div class="category-card" data-categoria="Collares" role="button" tabindex="0">
+          <img src="assets/images/collares.png" alt="Collares artesanales" class="category-image">
+          <h3>Collares</h3>
+        </div>
+
+        <div class="category-card" data-categoria="Pulseras" role="button" tabindex="0">
+          <img src="assets/images/pulseras.jpg" alt="Pulseras artesanales" class="category-image">
+          <h3>Pulseras</h3>
+        </div>
+
+        <div class="category-card" data-categoria="Anillos" role="button" tabindex="0">
+          <img src="assets/images/anillos.png" alt="Anillos artesanales" class="category-image">
+          <h3>Anillos</h3>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="productos">
+    <div class="container">
+      <div class="products-header">
+        <h2>Nuestros productos</h2>
+        <p>Descubre algunas de nuestras piezas favoritas.</p>
+      </div>
+
+      <div class="filters">
+        <button class="filter-button active" data-categoria="Todos">Todos</button>
+        <button class="filter-button" data-categoria="Pendientes">Pendientes</button>
+        <button class="filter-button" data-categoria="Collares">Collares</button>
+        <button class="filter-button" data-categoria="Pulseras">Pulseras</button>
+        <button class="filter-button" data-categoria="Anillos">Anillos</button>
+      </div>
+
+      <div class="products-grid" id="products-grid"></div>
+    </div>
+  </section>
+
+  <section class="about" id="sobre-nosotros">
+    <div class="container about-content">
+      <div class="about-text">
+        <h2>Sobre la marca</h2>
+        <p>
+          Somos una pequeña marca de joyería artesanal dedicada a crear piezas únicas,
+          cuidadas y con personalidad.
+        </p>
+        <p>
+          Cada pieza está pensada para transmitir delicadeza, naturalidad y elegancia,
+          usando materiales seleccionados y procesos manuales.
+        </p>
+        <p>
+          Nuestro objetivo es ofrecer joyas especiales, hechas con cariño y pensadas
+          para durar.
+        </p>
+      </div>
+
+      <div>
+        <img src="assets/images/taller.jpeg" alt="Taller de joyería artesanal" class="about-image">
+      </div>
+    </div>
+  </section>
+
+  <section class="newsletter">
+    <div class="container">
+      <h2>Únete a nuestra comunidad</h2>
+      <p>Recibe novedades, descuentos y nuevas colecciones.</p>
+
+      <form class="newsletter-form">
+        <input type="email" placeholder="Tu correo electrónico">
+        <button type="submit">Suscribirme</button>
+      </form>
+    </div>
+  </section>
+
+  <footer id="contacto">
+    <div class="container">
+      <div class="footer-grid">
+        <div>
+          <h3>ArtesaniaBrass</h3>
+          <p>Joyería artesanal en bronce y latón hecha a mano por Rosa Alonso.</p>
+        </div>
+
+        <div>
+          <h3>Tienda</h3>
+          <ul>
+            <li><a href="#productos">Productos</a></li>
+            <li><a href="#categorias">Categorías</a></li>
+            <li><a href="#">Novedades</a></li>
+            <li><a href="#">Ofertas</a></li>
+          </ul>
+        </div>
+
+        <div>
+          <h3>Ayuda</h3>
+          <ul>
+            <li><a href="#">Envíos</a></li>
+            <li><a href="#">Devoluciones</a></li>
+            <li><a href="#">Preguntas frecuentes</a></li>
+            <li><a href="#">Guía de tallas</a></li>
+          </ul>
+        </div>
+
+        <div>
+          <h3>Contacto</h3>
+          <ul>
+            <li>Email: intentaloaki@gmail.com</li>
+            <li>Instagram: @artesania.brass</li>
+            <li>El Vendrell, Tarragona</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="footer-bottom">
+        <p>&copy; 2026 ArtesaniaBrass. Todos los derechos reservados.</p>
+      </div>
+    </div>
+  </footer>
+
+  <aside class="cart-sidebar" id="cart-sidebar">
+    <div class="cart-header">
+      <h2>Tu carrito</h2>
+      <button class="close-cart" onclick="closeCart()">×</button>
+    </div>
+
+    <div class="cart-items" id="cart-items">
+      <p class="cart-empty">Tu carrito está vacío.</p>
+    </div>
+
+    <div class="cart-footer">
+      <p class="cart-total">
+        Total: <span id="cart-total">0,00 €</span>
+      </p>
+
+      <button class="clear-cart-button" id="clear-cart-button" type="button">
+        Vaciar carrito
+      </button>
+
+      <button class="checkout-button" id="checkout-button" type="button" disabled>
+        Finalizar compra
+      </button>
+    </div>
+  </aside>
+
+  <div id="product-detail-modal" class="product-detail-modal hidden" aria-hidden="true">
+    <div class="product-detail-backdrop" data-close-product-detail></div>
+    <div class="product-detail-dialog" role="dialog" aria-modal="true" aria-labelledby="product-detail-title">
+      <button class="product-detail-close" type="button" data-close-product-detail aria-label="Cerrar">×</button>
+
+      <div class="product-detail-gallery">
+        <img id="product-detail-main-image" src="" alt="" class="product-detail-main-image">
+        <div id="product-detail-thumbs" class="product-detail-thumbs"></div>
+      </div>
+
+      <div class="product-detail-info">
+        <div id="product-detail-badges" class="product-detail-badges"></div>
+        <h2 id="product-detail-title"></h2>
+        <p id="product-detail-description" class="product-detail-description"></p>
+        <p id="product-detail-measures" class="product-detail-measures hidden"></p>
+        <p id="product-detail-price" class="product-detail-price"></p>
+        <button id="product-detail-add-to-cart" class="primary-button" type="button">
+          Añadir al carrito
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/config/supabase-config.js"></script>
+  <script src="js/config/stripe-config.js"></script>
+  <script src="js/productos.js"></script>
+  <script src="js/store.js"></script>
+</body>
+</html>

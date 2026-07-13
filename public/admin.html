@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Administración | ArtesaniaBrass</title>
+    <link rel="stylesheet" href="css/admin.css">
+</head>
+<body>
+
+    <!-- LOGIN -->
+    <section id="login-section" class="login-section">
+        <div class="login-card">
+            <h1>ArtesaniaBrass</h1>
+            <p class="login-subtitle">Panel de administración</p>
+
+            <form id="login-form">
+                <label for="login-email">Correo electrónico</label>
+                <input type="email" id="login-email" required placeholder="tu@email.com">
+
+                <label for="login-password">Contraseña</label>
+                <input type="password" id="login-password" required placeholder="Tu contraseña">
+
+                <button type="submit" class="btn-primary">Iniciar sesión</button>
+            </form>
+
+            <p id="login-error" class="error-message hidden"></p>
+        </div>
+    </section>
+
+    <!-- PANEL -->
+    <section id="admin-section" class="admin-section hidden">
+        <header class="admin-header">
+            <div>
+                <h1>Panel de administración</h1>
+                <p id="admin-user-email" class="admin-user"></p>
+            </div>
+            <button id="logout-button" class="btn-secondary">Cerrar sesión</button>
+        </header>
+
+        <main class="admin-main">
+            <div class="admin-tabs">
+                <button id="tab-products" class="admin-tab active" type="button">Productos</button>
+                <button id="tab-orders" class="admin-tab" type="button">Pedidos</button>
+            </div>
+
+            <section id="products-panel" class="admin-panel">
+                <div class="admin-toolbar">
+                    <h2>Productos</h2>
+                    <button id="add-product-button" class="btn-primary">+ Añadir producto</button>
+                </div>
+
+                <p id="admin-message" class="admin-message hidden"></p>
+
+                <div class="admin-table-wrapper">
+                    <table class="admin-table">
+                        <thead>
+                            <tr>
+                                <th>Imagen</th>
+                                <th>Nombre</th>
+                                <th>Categoría</th>
+                                <th>Precio</th>
+                                <th>Disponibilidad</th>
+                                <th>Estado</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="products-table-body">
+                            <tr>
+                                <td colspan="7" class="loading-cell">Cargando productos...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <section id="orders-panel" class="admin-panel hidden">
+                <div class="admin-toolbar">
+                    <h2>Pedidos</h2>
+                    <button id="refresh-orders-button" class="btn-secondary" type="button">Actualizar</button>
+                </div>
+
+                <p id="orders-message" class="admin-message hidden"></p>
+
+                <div class="admin-table-wrapper">
+                    <table class="admin-table">
+                        <thead>
+                            <tr>
+                                <th>Pedido</th>
+                                <th>Fecha</th>
+                                <th>Cliente</th>
+                                <th>Total</th>
+                                <th>Estado</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="orders-table-body">
+                            <tr>
+                                <td colspan="6" class="loading-cell">Cargando pedidos...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        </main>
+    </section>
+
+    <!-- FORMULARIO -->
+    <div id="product-modal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modal-title">Añadir producto</h2>
+                <button id="close-modal" class="close-modal" type="button">×</button>
+            </div>
+
+            <form id="product-form">
+                <input type="hidden" id="product-id">
+
+                <label for="product-nombre">Nombre</label>
+                <input type="text" id="product-nombre" required>
+
+                <label for="product-descripcion">Descripción</label>
+                <textarea id="product-descripcion" rows="3" required></textarea>
+
+                <label for="product-precio">Precio (€)</label>
+                <input type="number" id="product-precio" step="0.01" min="0" required>
+
+                <label for="product-categoria">Categoría</label>
+                <select id="product-categoria" required>
+                    <option value="Pendientes">Pendientes</option>
+                    <option value="Collares">Collares</option>
+                    <option value="Pulseras">Pulseras</option>
+                    <option value="Anillos">Anillos</option>
+                </select>
+
+                <label for="product-disponibilidad">Disponibilidad</label>
+                <select id="product-disponibilidad" required>
+                    <option value="stock">En stock (pieza ya hecha)</option>
+                    <option value="bajo_demanda">Bajo demanda (se elabora al pedir)</option>
+                </select>
+                <p class="form-hint">Indica si la pieza está lista para enviar o hay que fabricarla.</p>
+
+                <label for="product-medidas">Medidas (opcional)</label>
+                <input type="text" id="product-medidas" placeholder="Ej.: 3 cm de largo · 1,5 cm de ancho">
+                <p class="form-hint">Si lo rellenas, se mostrará en la ficha del producto.</p>
+
+                <label for="product-alt">Texto alternativo de la imagen</label>
+                <input type="text" id="product-alt" required placeholder="Descripción breve de la imagen">
+
+                <label for="product-imagen">Imagen principal</label>
+                <input type="file" id="product-imagen" accept="image/*">
+                <p class="form-hint" id="current-image-hint"></p>
+
+                <label for="product-imagenes-extra">Fotografías adicionales (opcional)</label>
+                <input type="file" id="product-imagenes-extra" accept="image/*" multiple>
+                <p class="form-hint">Puedes seleccionar varias imágenes para la galería del producto.</p>
+                <div id="extra-images-list" class="extra-images-list"></div>
+
+                <label class="checkbox-label">
+                    <input type="checkbox" id="product-activo" checked>
+                    Producto visible en la tienda
+                </label>
+
+                <div class="modal-actions">
+                    <button type="button" id="cancel-form" class="btn-secondary">Cancelar</button>
+                    <button type="submit" class="btn-primary">Guardar producto</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="order-modal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="order-modal-title">Detalle del pedido</h2>
+                <button id="close-order-modal" class="close-modal" type="button">×</button>
+            </div>
+
+            <div id="order-modal-body" class="order-modal-body"></div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/config/supabase-config.js"></script>
+    <script src="js/admin.js"></script>
+</body>
+</html>
