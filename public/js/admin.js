@@ -195,6 +195,7 @@ async function loadAdminOrders() {
             status,
             shipping_address,
             pedido_items (
+                producto_id,
                 nombre,
                 precio_unitario,
                 cantidad
@@ -254,6 +255,14 @@ function renderAdminOrders() {
     });
 }
 
+function formatOrderItemLabel(item) {
+    if (item.producto_id) {
+        return `#${item.producto_id} · ${item.nombre}`;
+    }
+
+    return item.nombre;
+}
+
 function openOrderModal(pedido) {
     if (!pedido) return;
 
@@ -268,7 +277,7 @@ function openOrderModal(pedido) {
         <ul class="order-detail-list">
             ${(pedido.pedido_items ?? []).map((item) => `
                 <li>
-                    ${item.nombre}
+                    ${formatOrderItemLabel(item)}
                     <span>${item.cantidad} × ${formatPrice(item.precio_unitario)}</span>
                 </li>
             `).join("")}
@@ -285,19 +294,20 @@ function closeOrderModal() {
 async function loadAdminProducts() {
         productsTableBody.innerHTML = `
             <tr>
-                <td colspan="7" class="loading-cell">Cargando productos...</td>
+                <td colspan="9" class="loading-cell">Cargando productos...</td>
             </tr>
         `;
 
     const { data, error } = await supabaseClient
         .from("productos")
         .select("*")
-        .order("id", { ascending: true });
+        .order("orden", { ascending: true })
+        .order("id", { ascending: false });
 
     if (error) {
         productsTableBody.innerHTML = `
             <tr>
-                <td colspan="7" class="loading-cell">Error al cargar productos.</td>
+                <td colspan="9" class="loading-cell">Error al cargar productos.</td>
             </tr>
         `;
         showAdminMessage("No se pudieron cargar los productos.", "error");
@@ -312,14 +322,35 @@ function renderAdminProducts() {
     if (adminProducts.length === 0) {
         productsTableBody.innerHTML = `
             <tr>
-                <td colspan="7" class="loading-cell">No hay productos. Añade el primero.</td>
+                <td colspan="9" class="loading-cell">No hay productos. Añade el primero.</td>
             </tr>
         `;
         return;
     }
 
-    productsTableBody.innerHTML = adminProducts.map((producto) => `
+    productsTableBody.innerHTML = adminProducts.map((producto, index) => `
         <tr>
+            <td>
+                <div class="order-controls">
+                    <button
+                        class="btn-icon"
+                        type="button"
+                        data-action="move-up"
+                        data-id="${producto.id}"
+                        aria-label="Subir ${producto.nombre}"
+                        ${index === 0 ? "disabled" : ""}
+                    >↑</button>
+                    <button
+                        class="btn-icon"
+                        type="button"
+                        data-action="move-down"
+                        data-id="${producto.id}"
+                        aria-label="Bajar ${producto.nombre}"
+                        ${index === adminProducts.length - 1 ? "disabled" : ""}
+                    >↓</button>
+                </div>
+            </td>
+            <td><strong>#${producto.id}</strong></td>
             <td>
                 <img src="${producto.imagen}" alt="${producto.alt}" class="table-image">
             </td>
@@ -345,6 +376,14 @@ function renderAdminProducts() {
         </tr>
     `).join("");
 
+    productsTableBody.querySelectorAll("[data-action='move-up']").forEach((button) => {
+        button.addEventListener("click", () => moveProduct(Number(button.dataset.id), "up"));
+    });
+
+    productsTableBody.querySelectorAll("[data-action='move-down']").forEach((button) => {
+        button.addEventListener("click", () => moveProduct(Number(button.dataset.id), "down"));
+    });
+
     productsTableBody.querySelectorAll("[data-action='edit']").forEach((button) => {
         button.addEventListener("click", () => {
             const producto = adminProducts.find((item) => item.id === Number(button.dataset.id));
@@ -357,6 +396,41 @@ function renderAdminProducts() {
     });
 }
 
+async function moveProduct(productId, direction) {
+    const currentIndex = adminProducts.findIndex((item) => item.id === productId);
+
+    if (currentIndex === -1) {
+        return;
+    }
+
+    const targetIndex = direction === "up" ? currentIndex - 1 : currentIndex + 1;
+
+    if (targetIndex < 0 || targetIndex >= adminProducts.length) {
+        return;
+    }
+
+    const currentProduct = adminProducts[currentIndex];
+    const targetProduct = adminProducts[targetIndex];
+
+    const [{ error: currentError }, { error: targetError }] = await Promise.all([
+        supabaseClient
+            .from("productos")
+            .update({ orden: targetProduct.orden })
+            .eq("id", currentProduct.id),
+        supabaseClient
+            .from("productos")
+            .update({ orden: currentProduct.orden })
+            .eq("id", targetProduct.id)
+    ]);
+
+    if (currentError || targetError) {
+        showAdminMessage("No se pudo cambiar el orden del producto.", "error");
+        return;
+    }
+
+    await loadAdminProducts();
+}
+
 function openProductModal(producto = null) {
     editingProductId = producto ? producto.id : null;
     productForm.reset();
@@ -364,6 +438,18 @@ function openProductModal(producto = null) {
 
     document.getElementById("modal-title").textContent = producto ? "Editar producto" : "Añadir producto";
     document.getElementById("product-id").value = producto ? producto.id : "";
+
+    const productIdDisplay = document.getElementById("product-id-display");
+    const productIdValue = document.getElementById("product-id-value");
+
+    if (producto) {
+        productIdDisplay.classList.remove("hidden");
+        productIdValue.textContent = `#${producto.id}`;
+    } else {
+        productIdDisplay.classList.add("hidden");
+        productIdValue.textContent = "";
+    }
+
     document.getElementById("product-nombre").value = producto ? producto.nombre : "";
     document.getElementById("product-descripcion").value = producto ? producto.descripcion : "";
     document.getElementById("product-precio").value = producto ? producto.precio : "";

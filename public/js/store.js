@@ -61,7 +61,8 @@ async function loadProducts() {
         .from("productos")
         .select("*")
         .eq("activo", true)
-        .order("id", { ascending: true });
+        .order("orden", { ascending: true })
+        .order("id", { ascending: false });
 
     if (error) {
         console.warn("No se pudieron cargar productos desde Supabase.", error);
@@ -115,11 +116,13 @@ function renderProducts() {
                 ${renderDisponibilidadBadge(producto.disponibilidad)}
             </div>
             <div class="product-info product-card-open">
+                <p class="product-id">Ref. #${producto.id}</p>
                 <h3>${producto.nombre}</h3>
                 <p class="product-description">${producto.descripcion}</p>
                 <p class="product-price">${formatPrice(producto.precio)}</p>
                 <button
                     class="add-to-cart"
+                    data-product-id="${producto.id}"
                     data-nombre="${producto.nombre}"
                     data-precio="${producto.precio}"
                     data-disponibilidad="${producto.disponibilidad ?? "stock"}"
@@ -162,6 +165,7 @@ function renderProducts() {
         button.addEventListener("click", (event) => {
             event.stopPropagation();
             addToCart(
+                Number(button.dataset.productId),
                 button.dataset.nombre,
                 parseFloat(button.dataset.precio),
                 button.dataset.disponibilidad
@@ -222,15 +226,18 @@ function getCartLineItems() {
     const grouped = {};
 
     cart.forEach((item) => {
-        if (!grouped[item.name]) {
-            grouped[item.name] = {
+        const key = `${item.productoId ?? item.name}`;
+
+        if (!grouped[key]) {
+            grouped[key] = {
+                productId: item.productoId,
                 name: item.name,
                 price: item.price,
                 quantity: 0
             };
         }
 
-        grouped[item.name].quantity += 1;
+        grouped[key].quantity += 1;
     });
 
     return Object.values(grouped);
@@ -278,7 +285,7 @@ function openProductDetail(producto) {
     const thumbsContainer = document.getElementById("product-detail-thumbs");
     const badgesContainer = document.getElementById("product-detail-badges");
 
-    document.getElementById("product-detail-title").textContent = producto.nombre;
+    document.getElementById("product-detail-title").textContent = `#${producto.id} · ${producto.nombre}`;
     document.getElementById("product-detail-description").textContent = producto.descripcion;
 
     const measuresElement = document.getElementById("product-detail-measures");
@@ -322,7 +329,7 @@ function openProductDetail(producto) {
 
     const addButton = document.getElementById("product-detail-add-to-cart");
     addButton.onclick = () => {
-        addToCart(producto.nombre, producto.precio, producto.disponibilidad ?? "stock");
+        addToCart(producto.id, producto.nombre, producto.precio, producto.disponibilidad ?? "stock");
         closeProductDetail();
     };
 
@@ -355,9 +362,10 @@ function initProductDetail() {
     });
 }
 
-function addToCart(productName, productPrice, disponibilidad = "stock") {
+function addToCart(productoId, productName, productPrice, disponibilidad = "stock") {
     cart.push({
         id: `${Date.now()}-${Math.random().toString(36).slice(2)}`,
+        productoId,
         name: productName,
         price: productPrice,
         disponibilidad
@@ -449,7 +457,7 @@ function updateCart() {
     cartItemsElement.innerHTML = cart.map((item) => `
         <div class="cart-item">
             <div class="cart-item-info">
-                <span class="cart-item-name">${item.name}</span>
+                <span class="cart-item-name">${item.productoId ? `#${item.productoId} · ` : ""}${item.name}</span>
                 ${renderDisponibilidadBadge(item.disponibilidad ?? "stock")}
                 <span class="cart-item-price">${formatPrice(item.price)}</span>
             </div>

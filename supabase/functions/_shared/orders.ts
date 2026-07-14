@@ -5,6 +5,7 @@ export type OrderItem = {
   nombre: string;
   precio_unitario: number;
   cantidad: number;
+  producto_id?: number | null;
 };
 
 export type SavedOrder = {
@@ -67,10 +68,18 @@ function formatMoney(amount: number, currency: string) {
   }).format(amount);
 }
 
+function formatOrderItemLabel(item: OrderItem) {
+  if (item.producto_id) {
+    return `#${item.producto_id} · ${item.nombre}`;
+  }
+
+  return item.nombre;
+}
+
 function buildItemsHtml(items: OrderItem[]) {
   return items.map((item) => `
     <tr>
-      <td style="padding:8px 0;border-bottom:1px solid #eee;">${item.nombre}</td>
+      <td style="padding:8px 0;border-bottom:1px solid #eee;">${formatOrderItemLabel(item)}</td>
       <td style="padding:8px 0;border-bottom:1px solid #eee;text-align:center;">${item.cantidad}</td>
       <td style="padding:8px 0;border-bottom:1px solid #eee;text-align:right;">${formatMoney(item.precio_unitario * item.cantidad, "eur")}</td>
     </tr>
@@ -187,12 +196,38 @@ async function sendOrderEmails(order: SavedOrder) {
   return customerSent || ownerSent;
 }
 
+function extractProductIdFromLineItem(item: Stripe.LineItem) {
+  const product = item.price?.product;
+
+  if (product && typeof product === "object" && "metadata" in product) {
+    const parsedId = Number(product.metadata?.producto_id);
+
+    if (Number.isInteger(parsedId) && parsedId > 0) {
+      return parsedId;
+    }
+  }
+
+  const description = item.description ?? "";
+  const match = description.match(/^#(\d+)\s·\s/);
+
+  if (match) {
+    return Number(match[1]);
+  }
+
+  return null;
+}
+
+function extractProductNameFromLineItem(item: Stripe.LineItem) {
+  const description = item.description ?? "Producto";
+  return description.replace(/^#\d+\s·\s/, "");
+}
+
 export async function fulfillCheckoutSession(
   stripe: Stripe,
   sessionId: string,
 ): Promise<SavedOrder | null> {
   const session = await stripe.checkout.sessions.retrieve(sessionId, {
-    expand: ["line_items"],
+    expand: ["line_items.data.price.product"],
   });
 
   if (session.payment_status !== "paid") {
@@ -208,9 +243,10 @@ export async function fulfillCheckoutSession(
 
   const lineItems = session.line_items?.data ?? [];
   const items: OrderItem[] = lineItems.map((item) => ({
-    nombre: item.description ?? "Producto",
+    nombre: extractProductNameFromLineItem(item),
     precio_unitario: (item.price?.unit_amount ?? 0) / 100,
     cantidad: item.quantity ?? 1,
+    producto_id: extractProductIdFromLineItem(item),
   }));
 
   const totalAmount = (session.amount_total ?? 0) / 100;
@@ -252,6 +288,7 @@ export async function fulfillCheckoutSession(
         .from("pedido_items")
         .insert(items.map((item) => ({
           pedido_id: pedidoId,
+          producto_id: item.producto_id,
           nombre: item.nombre,
           precio_unitario: item.precio_unitario,
           cantidad: item.cantidad,
@@ -277,6 +314,7 @@ export async function fulfillCheckoutSession(
       email_enviado,
       created_at,
       pedido_items (
+        producto_id,
         nombre,
         precio_unitario,
         cantidad

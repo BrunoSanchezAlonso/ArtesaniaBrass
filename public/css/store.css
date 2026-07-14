@@ -119,10 +119,9 @@ nav a:hover {
 ========================= */
 
 .hero {
-    background: linear-gradient(rgba(0, 0, 0, 0.425), rgba(0, 0, 0, 0.425)),
-                url("/assets/images/hero.jpeg");
-    background-size: cover;
-    background-position: center;
+    background:
+        linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)),
+        url("/assets/images/hero.jpeg") center / cover no-repeat;
     color: #ffffff;
     min-height: 60vh;
     display: flex;
@@ -164,7 +163,7 @@ nav a:hover {
 
 .categories-grid {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(5, 1fr);
     gap: 25px;
 }
 
@@ -352,10 +351,19 @@ body.product-detail-open {
     z-index: 1;
 }
 
+.product-detail-gallery {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-width: 0;
+}
+
 .product-detail-main-image {
-    width: 100%;
-    aspect-ratio: 1 / 1;
-    object-fit: cover;
+    width: auto;
+    max-width: 100%;
+    height: auto;
+    max-height: min(70vh, 640px);
+    object-fit: contain;
     border-radius: 16px;
 }
 
@@ -431,6 +439,13 @@ body.product-detail-open {
     padding-top: 15px;
 }
 
+.product-id {
+    font-size: 0.8rem;
+    color: #8a5a44;
+    font-weight: bold;
+    margin-bottom: 6px;
+}
+
 .product-info h3 {
     font-size: 1.1rem;
     margin-bottom: 8px;
@@ -466,7 +481,8 @@ body.product-detail-open {
 ========================= */
 
 .about {
-    background-color: #fff;
+    background-color: #8a5a44;
+    color: #fff;
 }
 
 .about-content {
@@ -478,49 +494,12 @@ body.product-detail-open {
 
 .about-text p {
     margin-bottom: 15px;
-    color: #555;
+    color: #fff;
 }
 
 .about-image {
     border-radius: 16px;
     object-fit: cover;
-}
-
-/* =========================
-    NEWSLETTER
-========================= */
-
-.newsletter {
-    background-color: #8a5a44;
-    color: #fff;
-    text-align: center;
-}
-
-.newsletter h2 {
-    color: #fff;
-}
-
-.newsletter-form {
-    margin-top: 25px;
-    display: flex;
-    justify-content: center;
-    gap: 10px;
-    flex-wrap: wrap;
-}
-
-.newsletter-form input {
-    padding: 14px;
-    width: 300px;
-    border-radius: 25px;
-    border: none;
-}
-
-.newsletter-form button {
-    padding: 14px 24px;
-    border-radius: 25px;
-    background-color: #fff;
-    color: #8a5a44;
-    font-weight: bold;
 }
 
 /* =========================

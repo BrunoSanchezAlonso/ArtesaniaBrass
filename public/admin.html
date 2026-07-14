@@ -46,7 +46,10 @@
 
             <section id="products-panel" class="admin-panel">
                 <div class="admin-toolbar">
-                    <h2>Productos</h2>
+                    <div>
+                        <h2>Productos</h2>
+                        <p class="admin-toolbar-hint">Los productos de arriba aparecen primero en la tienda. Usa las flechas para reordenar.</p>
+                    </div>
                     <button id="add-product-button" class="btn-primary">+ Añadir producto</button>
                 </div>
 
@@ -56,6 +59,8 @@
                     <table class="admin-table">
                         <thead>
                             <tr>
+                                <th>Orden</th>
+                                <th>ID</th>
                                 <th>Imagen</th>
                                 <th>Nombre</th>
                                 <th>Categoría</th>
@@ -67,7 +72,7 @@
                         </thead>
                         <tbody id="products-table-body">
                             <tr>
-                                <td colspan="7" class="loading-cell">Cargando productos...</td>
+                                <td colspan="9" class="loading-cell">Cargando productos...</td>
                             </tr>
                         </tbody>
                     </table>
@@ -116,6 +121,11 @@
             <form id="product-form">
                 <input type="hidden" id="product-id">
 
+                <div id="product-id-display" class="product-id-display hidden">
+                    <strong>ID del producto:</strong>
+                    <span id="product-id-value"></span>
+                </div>
+
                 <label for="product-nombre">Nombre</label>
                 <input type="text" id="product-nombre" required>
 
@@ -131,6 +141,7 @@
                     <option value="Collares">Collares</option>
                     <option value="Pulseras">Pulseras</option>
                     <option value="Anillos">Anillos</option>
+                    <option value="Conjuntos">Conjuntos</option>
                 </select>
 
                 <label for="product-disponibilidad">Disponibilidad</label>

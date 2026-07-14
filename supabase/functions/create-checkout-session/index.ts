@@ -13,6 +13,7 @@ type CartItem = {
   name: string;
   price: number;
   quantity: number;
+  productId?: number;
 };
 
 function jsonResponse(body: Record<string, unknown>, status = 200) {
@@ -38,6 +39,7 @@ function validateItems(items: unknown): CartItem[] {
     const name = typeof item?.name === "string" ? item.name.trim() : "";
     const price = Number(item?.price);
     const quantity = Number(item?.quantity ?? 1);
+    const productId = Number(item?.productId);
 
     if (!name || name.length > 120) {
       throw new Error("Nombre de producto no válido.");
@@ -51,7 +53,20 @@ function validateItems(items: unknown): CartItem[] {
       throw new Error("Cantidad no válida.");
     }
 
-    return { name, price, quantity };
+    if (
+      item?.productId !== undefined &&
+      item?.productId !== null &&
+      (!Number.isInteger(productId) || productId <= 0)
+    ) {
+      throw new Error("Identificador de producto no válido.");
+    }
+
+    return {
+      name,
+      price,
+      quantity,
+      productId: Number.isInteger(productId) && productId > 0 ? productId : undefined,
+    };
   });
 }
 
@@ -97,7 +112,10 @@ serve(async (req) => {
           currency: "eur",
           unit_amount: Math.round(item.price * 100),
           product_data: {
-            name: item.name,
+            name: item.productId ? `#${item.productId} · ${item.name}` : item.name,
+            metadata: item.productId
+              ? { producto_id: String(item.productId) }
+              : undefined,
           },
         },
       })),

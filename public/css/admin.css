@@ -89,6 +89,12 @@ body {
     color: #8a5a44;
 }
 
+.admin-toolbar-hint {
+    margin-top: 6px;
+    color: #666;
+    font-size: 0.9rem;
+}
+
 .admin-tabs {
     display: flex;
     gap: 10px;
@@ -237,6 +243,40 @@ body {
     display: flex;
     gap: 8px;
     flex-wrap: wrap;
+}
+
+.order-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.btn-icon {
+    width: 32px;
+    height: 32px;
+    border: 1px solid #d7c4b2;
+    border-radius: 8px;
+    background: #fff;
+    color: #8a5a44;
+    font-size: 1rem;
+    line-height: 1;
+}
+
+.btn-icon:hover:not(:disabled) {
+    background: #f2e7da;
+}
+
+.btn-icon:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+}
+
+.product-id-display {
+    margin-top: 8px;
+    padding: 12px 14px;
+    border-radius: 8px;
+    background: #f7f1ea;
+    color: #5c4030;
 }
 
 /* FORMULARIOS */
