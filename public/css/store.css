@@ -500,7 +500,7 @@ footer {
     height: 80px;
     border-radius: 50%;
     object-fit: cover;
-    flex-shrink: 0;
+    flex-shrink: 1.5;
 }
 
 .footer-brand p {
