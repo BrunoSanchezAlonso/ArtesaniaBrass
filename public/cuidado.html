@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="stylesheet" href="css/store.css">
-  <title>Elegir forma de pago | ArtesaniaBrass</title>
+  <title>Cuidado de tu joya | ArtesaniaBrass</title>
 </head>
 <body>
   <header>
@@ -30,98 +30,65 @@
     </div>
   </header>
 
-  <main class="payment-page">
-    <div class="payment-card">
-      <h1>¿Cómo quieres pagar?</h1>
-      <p class="payment-intro">
-        Elige la forma de pago que más te convenga. Puedes pagar con tarjeta
-        desde la web, por Bizum o por transferencia bancaria.
+  <main class="info-page">
+    <div class="container info-page-content">
+      <p class="info-page-eyebrow">Consejos</p>
+      <h1>Para cuidar tu joya</h1>
+      <p class="info-page-intro">
+        Unas pocas costumbres diarias ayudan a que tu pieza se conserve mejor
+        y conserve su belleza artesanal durante mucho tiempo.
       </p>
 
-      <section class="payment-summary" aria-labelledby="payment-summary-title">
-        <h2 id="payment-summary-title">Resumen del pedido</h2>
-        <ul id="payment-order-items" class="order-summary-list"></ul>
-        <p class="payment-total">
-          Total: <strong id="payment-total">0,00 €</strong>
-        </p>
-      </section>
+      <div class="policy-sections">
+        <section class="policy-block">
+          <h2>Recomendaciones básicas</h2>
+          <ul class="policy-list">
+            <li>Guarda la joya en su caja y en un lugar seco.</li>
+            <li>No la uses cuando hagas ejercicio.</li>
+            <li>No la mojes ni la perfumes.</li>
+          </ul>
+        </section>
 
-      <fieldset class="payment-methods">
-        <legend class="visually-hidden">Forma de pago</legend>
+        <section class="policy-block">
+          <h2>Sobre el latón</h2>
+          <p>
+            El latón es un material cambiante. Con el tiempo se oscurece y
+            salen manchas opacas que pueden dar a tu joya un toque personal,
+            único y muy bello. Pero si no te gusta, puedes limpiarlo así:
+          </p>
+        </section>
 
-        <label class="payment-option">
-          <input type="radio" name="payment-method" value="tarjeta" checked>
-          <span class="payment-option-body">
-            <strong>Tarjeta (pago web)</strong>
-            <span>Pago seguro con tarjeta a través de Stripe.</span>
-          </span>
-        </label>
+        <section class="policy-block">
+          <h2>Con bicarbonato de sodio</h2>
+          <p>
+            Pon bicarbonato de sodio en un cepillo de dientes mojado y frota
+            suavemente.
+          </p>
+        </section>
 
-        <label class="payment-option">
-          <input type="radio" name="payment-method" value="bizum">
-          <span class="payment-option-body">
-            <strong>Bizum</strong>
-            <span>Envía el importe por Bizum y avísanos del pedido.</span>
-          </span>
-        </label>
+        <section class="policy-block">
+          <h2>Con un paño de lana de acero</h2>
+          <p>
+            Frota suavemente con un paño de lana de acero muy fino y
+            humedecido. En esta bolsa encontrarás un trocito que puedes
+            conservar y utilizar cuando lo necesites.
+          </p>
+        </section>
 
-        <label class="payment-option">
-          <input type="radio" name="payment-method" value="transferencia">
-          <span class="payment-option-body">
-            <strong>Transferencia bancaria</strong>
-            <span>Transfiere el total a nuestra cuenta bancaria.</span>
-          </span>
-        </label>
-      </fieldset>
-
-      <section id="payment-contact-form" class="payment-contact hidden">
-        <h2>Tus datos de contacto</h2>
-        <p class="payment-contact-hint">
-          Los necesitamos para registrar el pedido y avisarte cuando confirmemos el pago.
-        </p>
-        <label for="payment-customer-name">Nombre</label>
-        <input type="text" id="payment-customer-name" autocomplete="name" placeholder="Tu nombre">
-        <label for="payment-customer-email">Email</label>
-        <input type="email" id="payment-customer-email" autocomplete="email" placeholder="tu@email.com">
-      </section>
-
-      <!-- Edita aquí los datos de Bizum -->
-      <section id="payment-details-bizum" class="payment-details hidden">
-        <h2>Datos para Bizum</h2>
-        <p><strong>Teléfono Bizum:</strong> +34 610 266 411</p>
-        <p><strong>Concepto:</strong> Tu nombre + referencias de las piezas</p>
-        <p>
-          Cuando hayas enviado el Bizum, escríbenos a
-          <a href="mailto:info@artesaniabrass.es">info@artesaniabrass.es</a>
-          o por Instagram
-          <a href="https://www.instagram.com/artesania.brass/" target="_blank" rel="noopener noreferrer">@artesania.brass</a>
-          indicando qué has pedido.
-        </p>
-      </section>
-
-      <!-- Edita aquí los datos de transferencia -->
-      <section id="payment-details-transferencia" class="payment-details hidden">
-        <h2>Datos para transferencia</h2>
-        <p><strong>Titular:</strong> Rosa Alonso</p>
-        <p><strong>IBAN:</strong> ES00 0000 0000 0000 0000 0000</p>
-        <p><strong>Banco:</strong> Nombre del banco</p>
-        <p><strong>Concepto:</strong> Tu nombre + referencias de las piezas</p>
-        <p>
-          Cuando hayas hecho la transferencia, escríbenos a
-          <a href="mailto:info@artesaniabrass.es">info@artesaniabrass.es</a>
-          o por Instagram
-          <a href="https://www.instagram.com/artesania.brass/" target="_blank" rel="noopener noreferrer">@artesania.brass</a>
-          indicando qué has pedido.
-        </p>
-      </section>
-
-      <p id="payment-error" class="payment-error hidden"></p>
-
-      <div class="payment-actions">
-        <button id="payment-continue" class="payment-continue-button" type="button">
-          Continuar al pago con tarjeta
-        </button>
+        <section class="policy-block">
+          <h2>Importante</h2>
+          <p>
+            Recuerda que si tu joya tiene pátinas o esmaltes, esta zona no
+            debe frotarse para no dañar el color.
+          </p>
+        </section>
       </div>
+
+      <p class="info-page-cta">
+        ¿Tienes dudas sobre el cuidado de tu pieza?
+        <a href="mailto:info@artesaniabrass.es">Escríbenos</a>
+        y te ayudamos.
+      </p>
     </div>
   </main>
 
@@ -176,7 +143,7 @@
             <li>
               <a href="https://www.instagram.com/artesania.brass/" target="_blank" rel="noopener noreferrer" class="footer-contact-link">
                 <svg class="footer-icon" viewBox="0 0 24 24" aria-hidden="true">
-                  <path d="M7 3h10a4 4 0 0 1 4 4v10a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4V7a4 4 0 0 1 4-4zm5 4.5A4.5 4.5 0 1 0 16.5 12 4.5 4.5 0 0 0 12 7.5zm0 2A2.5 2.5 0 1 1 9.5 12 2.5 2.5 0 0 1 12 9.5zM17.8 6.2a1 1 0 1 0 1 1 1 1 0 0 0-1-1z"/>
+                  <path d="M7 3h10a4 4 0 0 1 4 4v10a4 4 0 0 1-4 4H7a4 4 0 0 1 4-4zm5 4.5A4.5 4.5 0 1 0 16.5 12 4.5 4.5 0 0 0 12 7.5zm0 2A2.5 2.5 0 1 1 9.5 12 2.5 2.5 0 0 1 12 9.5zM17.8 6.2a1 1 0 1 0 1 1 1 1 0 0 0-1-1z"/>
                 </svg>
                 <span>@artesania.brass</span>
               </a>
@@ -226,8 +193,6 @@
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="js/config/supabase-config.js"></script>
-  <script src="js/config/stripe-config.js"></script>
   <script src="js/store.js"></script>
-  <script src="js/pago.js"></script>
 </body>
 </html>

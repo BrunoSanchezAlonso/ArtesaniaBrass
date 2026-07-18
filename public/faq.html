@@ -4,10 +4,9 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="stylesheet" href="css/store.css">
-  <title>ArtesaniaBrass | Joyería Artesanal</title>
+  <title>Preguntas frecuentes | ArtesaniaBrass</title>
 </head>
 <body>
-
   <header>
     <div class="container navbar">
       <a href="index.html" class="logo">
@@ -17,11 +16,11 @@
 
       <nav>
         <ul>
-          <li><a href="#inicio">Inicio</a></li>
-          <li><a href="#categorias">Un poco de orden...</a></li>
-          <li><a href="#productos">Te proponemos</a></li>
-          <li><a href="#sobre-nosotros">Hola, soy Rosa</a></li>
-          <li><a href="#contacto">Contacto</a></li>
+          <li><a href="index.html#inicio">Inicio</a></li>
+          <li><a href="index.html#categorias">Un poco de orden...</a></li>
+          <li><a href="index.html#productos">Te proponemos</a></li>
+          <li><a href="index.html#sobre-nosotros">Hola, soy Rosa</a></li>
+          <li><a href="index.html#contacto">Contacto</a></li>
         </ul>
       </nav>
 
@@ -31,94 +30,97 @@
     </div>
   </header>
 
-  <section class="hero" id="inicio">
-    <div class="container hero-content">
-      <h1>Joyería artesanal en latón y cobre</h1>
-      <p>Hecha a mano por Rosa Alonso</p>
-      <a href="#productos" class="primary-button">Míralo!</a>
+  <main class="info-page">
+    <div class="container info-page-content">
+      <p class="info-page-eyebrow">Ayuda</p>
+      <h1>Preguntas frecuentes</h1>
+      <p class="info-page-intro">
+        Aquí tienes respuestas a las dudas más habituales sobre pedidos, pagos,
+        envíos y el cuidado de las piezas. Si no encuentras lo que buscas,
+        escríbenos y te ayudamos.
+      </p>
+
+      <div class="faq-list">
+        <details class="faq-item" open>
+          <summary>¿Las piezas son hechas a mano?</summary>
+          <p>
+            Sí. Cada joya de ArtesaniaBrass está elaborada artesanalmente por
+            Rosa Alonso en latón y cobre, con acabados cuidados uno a uno.
+          </p>
+        </details>
+
+        <details class="faq-item">
+          <summary>¿Qué formas de pago aceptáis?</summary>
+          <p>
+            Puedes pagar con tarjeta desde la web, por Bizum o por transferencia
+            bancaria. En Bizum y transferencia el pedido queda registrado y
+            lo confirmamos cuando recibamos el pago.
+          </p>
+        </details>
+
+        <details class="faq-item">
+          <summary>¿Cuánto tarda el envío?</summary>
+          <p>
+            El plazo depende de si la pieza está lista o se elabora para ti.
+            En general, prepararemos y enviaremos tu pedido lo antes posible
+            y te mantendremos informada por email o Instagram.
+          </p>
+        </details>
+
+        <details class="faq-item">
+          <summary>¿Hacéis envíos a toda España?</summary>
+          <p>
+            Sí, enviamos a toda España. Si tienes alguna duda sobre tu zona o
+            un envío internacional, escríbenos antes de comprar.
+          </p>
+        </details>
+
+        <details class="faq-item">
+          <summary>¿Puedo devolver o cambiar una pieza?</summary>
+          <p>
+            Si la pieza no te encaja o hay algún problema, contacta con nosotras
+            lo antes posible. Revisaremos cada caso para ofrecerte la mejor
+            solución.
+          </p>
+        </details>
+
+        <details class="faq-item">
+          <summary>¿Cómo cuido mi joya de latón o cobre?</summary>
+          <p>
+            Evita el contacto prolongado con agua, perfumes y cremas. Guárdala
+            en un lugar seco y límpiala con un paño suave. Con el tiempo el
+            metal puede adquirir una pátina natural; forma parte de su carácter.
+          </p>
+        </details>
+
+        <details class="faq-item">
+          <summary>¿Hacéis encargos personalizados?</summary>
+          <p>
+            Sí, podemos valorar encargos a medida. Cuéntanos tu idea por email
+            o Instagram y te diremos si es posible y cómo sería el proceso.
+          </p>
+        </details>
+
+        <details class="faq-item">
+          <summary>¿Cómo puedo contactaros?</summary>
+          <p>
+            Escríbenos a
+            <a href="mailto:info@artesaniabrass.es">info@artesaniabrass.es</a>,
+            llámanos o escríbenos por WhatsApp al
+            <a href="tel:+34610266411">+34 610 266 411</a>,
+            o síguenos en Instagram
+            <a href="https://www.instagram.com/artesania.brass/" target="_blank" rel="noopener noreferrer">@artesania.brass</a>.
+          </p>
+        </details>
+      </div>
+
+      <p class="info-page-cta">
+        ¿Sigues con dudas?
+        <a href="mailto:info@artesaniabrass.es">Escríbenos</a>
+        y te respondemos encantadas.
+      </p>
     </div>
-  </section>
-
-  <section id="categorias">
-    <div class="container">
-      <div class="categories-header">
-        <h2>Un poco de orden...</h2>
-        <p>Para que sea mas cómodo, hemos agrupado las piezas por categorías</p>
-      </div>
-
-      <div class="categories-grid">
-        <div class="category-card" data-categoria="Pendientes" role="button" tabindex="0">
-          <img src="assets/images/pendientes.png" alt="Pendientes artesanales" class="category-image">
-          <h3>Pendientes</h3>
-        </div>
-
-        <div class="category-card" data-categoria="Collares" role="button" tabindex="0">
-          <img src="assets/images/collares.png" alt="Collares artesanales" class="category-image">
-          <h3>Collares</h3>
-        </div>
-
-        <div class="category-card" data-categoria="Pulseras" role="button" tabindex="0">
-          <img src="assets/images/pulseras.jpg" alt="Pulseras artesanales" class="category-image">
-          <h3>Pulseras</h3>
-        </div>
-
-        <div class="category-card" data-categoria="Anillos" role="button" tabindex="0">
-          <img src="assets/images/anillos.png" alt="Anillos artesanales" class="category-image">
-          <h3>Anillos</h3>
-        </div>
-
-        <div class="category-card" data-categoria="Conjuntos" role="button" tabindex="0">
-          <img src="assets/images/conjuntos.png" alt="Conjuntos" class="category-image">
-          <h3>Conjuntos</h3>
-        </div>
-
-
-      </div>
-    </div>
-  </section>
-
-  <section id="productos">
-    <div class="container">
-      <div class="products-header">
-        <h2>Te proponemos</h2>
-        <p>Descubre algunas de nuestras piezas favoritas</p>
-      </div>
-
-      <div class="filters">
-        <button class="filter-button active" data-categoria="Todos">Todos</button>
-        <button class="filter-button" data-categoria="Pendientes">Pendientes</button>
-        <button class="filter-button" data-categoria="Collares">Collares</button>
-        <button class="filter-button" data-categoria="Pulseras">Pulseras</button>
-        <button class="filter-button" data-categoria="Anillos">Anillos</button>
-        <button class="filter-button" data-categoria="Conjuntos">Conjuntos</button>
-      </div>
-
-      <div class="products-grid" id="products-grid"></div>
-    </div>
-  </section>
-
-  <section class="about" id="sobre-nosotros">
-    <div class="container about-content">
-      <div class="about-text">
-        <h2>Hola, soy Rosa</h2>
-        <p>
-          Mi pequeña marca de joyería artesanal está dedicada a crear piezas únicas,
-          elaboradas a mano y con personalidad.
-        </p>
-        <p>
-          Cada pieza está pensada para transmitir delicadeza, naturalidad y elegancia,
-          usando materiales seleccionados y procesos manuales.
-        </p>
-        <p>
-          Me apasiona crear joyas especiales, hechas con cariño y a tu gusto.
-        </p>
-      </div>
-
-      <div>
-        <img src="assets/images/taller.jpeg" alt="Taller de joyería artesanal" class="about-image">
-      </div>
-    </div>
-  </section>
+  </main>
 
   <footer id="contacto">
     <div class="container">
@@ -218,28 +220,6 @@
       </button>
     </div>
   </aside>
-
-  <div id="product-detail-modal" class="product-detail-modal hidden" aria-hidden="true">
-    <div class="product-detail-backdrop" data-close-product-detail></div>
-    <div class="product-detail-dialog" role="dialog" aria-modal="true" aria-labelledby="product-detail-title">
-      <button class="product-detail-close" type="button" data-close-product-detail aria-label="Cerrar">×</button>
-
-      <div class="product-detail-gallery">
-        <img id="product-detail-main-image" src="" alt="" class="product-detail-main-image">
-        <div id="product-detail-thumbs" class="product-detail-thumbs"></div>
-      </div>
-
-      <div class="product-detail-info">
-        <h2 id="product-detail-title"></h2>
-        <p id="product-detail-description" class="product-detail-description"></p>
-        <p id="product-detail-measures" class="product-detail-measures hidden"></p>
-        <p id="product-detail-price" class="product-detail-price"></p>
-        <button id="product-detail-add-to-cart" class="primary-button" type="button">
-          Añadir al carrito
-        </button>
-      </div>
-    </div>
-  </div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="js/config/supabase-config.js"></script>
