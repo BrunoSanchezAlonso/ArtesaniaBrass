@@ -122,7 +122,7 @@ nav a:hover {
 .hero {
     background:
         linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)),
-        url("/assets/images/hero.avif") center / cover no-repeat;
+        url("/assets/images/hero.jpg") center / cover no-repeat;
     color: #ffffff;
     min-height: 60vh;
     display: flex;
