@@ -10,26 +10,6 @@ function formatPrice(precio) {
     return `${Number(precio).toFixed(2).replace(".", ",")} €`;
 }
 
-function getDisponibilidadInfo(disponibilidad) {
-    if (disponibilidad === "bajo_demanda") {
-        return {
-            label: "Bajo demanda",
-            className: "availability-made-to-order"
-        };
-    }
-
-    return {
-        label: "En stock",
-        className: "availability-in-stock"
-    };
-}
-
-function renderDisponibilidadBadge(disponibilidad) {
-    const info = getDisponibilidadInfo(disponibilidad);
-
-    return `<span class="product-availability ${info.className}">${info.label}</span>`;
-}
-
 function normalizeExtraImages(imagenesExtra) {
     if (!Array.isArray(imagenesExtra)) {
         return [];
@@ -113,7 +93,6 @@ function renderProducts() {
         <article class="product-card" data-product-id="${producto.id}" role="button" tabindex="0" aria-label="Ver ${producto.nombre}">
             <div class="product-image-wrapper product-card-open">
                 <img src="${producto.imagen}" alt="${producto.alt}" class="product-image">
-                ${renderDisponibilidadBadge(producto.disponibilidad)}
             </div>
             <div class="product-info product-card-open">
                 <p class="product-id">Ref. #${producto.id}</p>
@@ -125,7 +104,6 @@ function renderProducts() {
                     data-product-id="${producto.id}"
                     data-nombre="${producto.nombre}"
                     data-precio="${producto.precio}"
-                    data-disponibilidad="${producto.disponibilidad ?? "stock"}"
                 >
                     Añadir al carrito
                 </button>
@@ -167,8 +145,7 @@ function renderProducts() {
             addToCart(
                 Number(button.dataset.productId),
                 button.dataset.nombre,
-                parseFloat(button.dataset.precio),
-                button.dataset.disponibilidad
+                parseFloat(button.dataset.precio)
             );
         });
     });
@@ -222,37 +199,6 @@ function getCartTotal() {
     return cart.reduce((total, item) => total + item.price, 0);
 }
 
-function getCartLineItems() {
-    const grouped = {};
-
-    cart.forEach((item) => {
-        const key = `${item.productoId ?? item.name}`;
-
-        if (!grouped[key]) {
-            grouped[key] = {
-                productId: item.productoId,
-                name: item.name,
-                price: item.price,
-                quantity: 0
-            };
-        }
-
-        grouped[key].quantity += 1;
-    });
-
-    return Object.values(grouped);
-}
-
-function getCheckoutReturnUrls() {
-    const baseUrl = new URL("./", window.location.href).href;
-
-    // Sin .html para evitar que `serve` pierda el session_id al redirigir
-    return {
-        successUrl: `${baseUrl}success?session_id={CHECKOUT_SESSION_ID}`,
-        cancelUrl: `${baseUrl}cancel`
-    };
-}
-
 function openCart() {
     document.getElementById("cart-sidebar").classList.add("active");
 }
@@ -283,7 +229,6 @@ function openProductDetail(producto) {
     const modal = document.getElementById("product-detail-modal");
     const images = getProductImages(producto);
     const thumbsContainer = document.getElementById("product-detail-thumbs");
-    const badgesContainer = document.getElementById("product-detail-badges");
 
     document.getElementById("product-detail-title").textContent = `#${producto.id} · ${producto.nombre}`;
     document.getElementById("product-detail-description").textContent = producto.descripcion;
@@ -298,8 +243,6 @@ function openProductDetail(producto) {
     }
 
     document.getElementById("product-detail-price").textContent = formatPrice(producto.precio);
-
-    badgesContainer.innerHTML = renderDisponibilidadBadge(producto.disponibilidad ?? "stock");
 
     setProductDetailImage(0);
 
@@ -329,7 +272,7 @@ function openProductDetail(producto) {
 
     const addButton = document.getElementById("product-detail-add-to-cart");
     addButton.onclick = () => {
-        addToCart(producto.id, producto.nombre, producto.precio, producto.disponibilidad ?? "stock");
+        addToCart(producto.id, producto.nombre, producto.precio);
         closeProductDetail();
     };
 
@@ -362,13 +305,12 @@ function initProductDetail() {
     });
 }
 
-function addToCart(productoId, productName, productPrice, disponibilidad = "stock") {
+function addToCart(productoId, productName, productPrice) {
     cart.push({
         id: `${Date.now()}-${Math.random().toString(36).slice(2)}`,
         productoId,
         name: productName,
-        price: productPrice,
-        disponibilidad
+        price: productPrice
     });
 
     saveCart();
@@ -391,47 +333,7 @@ function clearCart() {
 async function handleCheckout() {
     if (cart.length === 0) return;
 
-    const checkoutButton = document.getElementById("checkout-button");
-    const checkoutUrl = typeof getCheckoutFunctionUrl === "function"
-        ? getCheckoutFunctionUrl()
-        : null;
-
-    if (!isStripeConfigured() || !checkoutUrl) {
-        alert("Los pagos aún no están configurados. Revisa stripe-config.js y despliega la función de Supabase.");
-        return;
-    }
-
-    checkoutButton.disabled = true;
-    checkoutButton.textContent = "Redirigiendo a Stripe...";
-
-    try {
-        const { successUrl, cancelUrl } = getCheckoutReturnUrls();
-        const response = await fetch(checkoutUrl, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                Authorization: `Bearer ${SUPABASE_ANON_KEY}`
-            },
-            body: JSON.stringify({
-                items: getCartLineItems(),
-                successUrl,
-                cancelUrl
-            })
-        });
-
-        const data = await response.json();
-
-        if (!response.ok) {
-            throw new Error(data.error || "No se pudo iniciar el pago.");
-        }
-
-        window.location.href = data.url;
-    } catch (error) {
-        console.error("Error en checkout:", error);
-        alert(error.message || "No se pudo conectar con Stripe. Inténtalo de nuevo.");
-        checkoutButton.disabled = cart.length === 0;
-        checkoutButton.textContent = "Finalizar compra";
-    }
+    window.location.href = "pago.html";
 }
 
 function updateCart() {
@@ -458,7 +360,6 @@ function updateCart() {
         <div class="cart-item">
             <div class="cart-item-info">
                 <span class="cart-item-name">${item.productoId ? `#${item.productoId} · ` : ""}${item.name}</span>
-                ${renderDisponibilidadBadge(item.disponibilidad ?? "stock")}
                 <span class="cart-item-price">${formatPrice(item.price)}</span>
             </div>
             <button

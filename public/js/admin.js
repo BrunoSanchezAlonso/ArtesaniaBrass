@@ -294,7 +294,7 @@ function closeOrderModal() {
 async function loadAdminProducts() {
         productsTableBody.innerHTML = `
             <tr>
-                <td colspan="9" class="loading-cell">Cargando productos...</td>
+                <td colspan="8" class="loading-cell">Cargando productos...</td>
             </tr>
         `;
 
@@ -307,7 +307,7 @@ async function loadAdminProducts() {
     if (error) {
         productsTableBody.innerHTML = `
             <tr>
-                <td colspan="9" class="loading-cell">Error al cargar productos.</td>
+                <td colspan="8" class="loading-cell">Error al cargar productos.</td>
             </tr>
         `;
         showAdminMessage("No se pudieron cargar los productos.", "error");
@@ -322,7 +322,7 @@ function renderAdminProducts() {
     if (adminProducts.length === 0) {
         productsTableBody.innerHTML = `
             <tr>
-                <td colspan="9" class="loading-cell">No hay productos. Añade el primero.</td>
+                <td colspan="8" class="loading-cell">No hay productos. Añade el primero.</td>
             </tr>
         `;
         return;
@@ -357,7 +357,6 @@ function renderAdminProducts() {
             <td>${producto.nombre}</td>
             <td>${producto.categoria}</td>
             <td>${formatPrice(producto.precio)}</td>
-            <td>${getDisponibilidadLabel(producto.disponibilidad ?? "stock")}</td>
             <td>
                 <span class="status-badge ${producto.activo ? "status-active" : "status-inactive"}">
                     ${producto.activo ? "Visible" : "Oculto"}
@@ -454,9 +453,6 @@ function openProductModal(producto = null) {
     document.getElementById("product-descripcion").value = producto ? producto.descripcion : "";
     document.getElementById("product-precio").value = producto ? producto.precio : "";
     document.getElementById("product-categoria").value = producto ? producto.categoria : "Pendientes";
-    document.getElementById("product-disponibilidad").value = producto
-        ? (producto.disponibilidad ?? "stock")
-        : "bajo_demanda";
     document.getElementById("product-medidas").value = producto?.medidas ?? "";
     document.getElementById("product-alt").value = producto ? producto.alt : "";
     document.getElementById("product-activo").checked = producto ? producto.activo : true;
@@ -538,7 +534,6 @@ async function handleSaveProduct(event) {
     const descripcion = document.getElementById("product-descripcion").value.trim();
     const precio = parseFloat(document.getElementById("product-precio").value);
     const categoria = document.getElementById("product-categoria").value;
-    const disponibilidad = document.getElementById("product-disponibilidad").value;
     const medidas = document.getElementById("product-medidas").value.trim();
     const alt = document.getElementById("product-alt").value.trim();
     const activo = document.getElementById("product-activo").checked;
@@ -578,7 +573,6 @@ async function handleSaveProduct(event) {
         descripcion,
         precio,
         categoria,
-        disponibilidad,
         medidas: medidas || null,
         alt,
         imagen,
@@ -657,8 +651,4 @@ async function uploadImage(file) {
 
 function formatPrice(precio) {
     return `${Number(precio).toFixed(2).replace(".", ",")} €`;
-}
-
-function getDisponibilidadLabel(disponibilidad) {
-    return disponibilidad === "bajo_demanda" ? "Bajo demanda" : "En stock";
 }

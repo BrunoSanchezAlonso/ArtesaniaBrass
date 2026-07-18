@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="css/store.css">
+  <title>Elegir forma de pago | ArtesaniaBrass</title>
+</head>
+<body>
+  <main class="payment-page">
+    <div class="payment-card">
+      <a href="index.html" class="payment-back">← Volver a la tienda</a>
+
+      <h1>¿Cómo quieres pagar?</h1>
+      <p class="payment-intro">
+        Elige la forma de pago que más te convenga. Puedes pagar con tarjeta
+        desde la web, por Bizum o por transferencia bancaria.
+      </p>
+
+      <section class="payment-summary" aria-labelledby="payment-summary-title">
+        <h2 id="payment-summary-title">Resumen del pedido</h2>
+        <ul id="payment-order-items" class="order-summary-list"></ul>
+        <p class="payment-total">
+          Total: <strong id="payment-total">0,00 €</strong>
+        </p>
+      </section>
+
+      <fieldset class="payment-methods">
+        <legend class="visually-hidden">Forma de pago</legend>
+
+        <label class="payment-option">
+          <input type="radio" name="payment-method" value="tarjeta" checked>
+          <span class="payment-option-body">
+            <strong>Tarjeta (pago web)</strong>
+            <span>Pago seguro con tarjeta a través de Stripe.</span>
+          </span>
+        </label>
+
+        <label class="payment-option">
+          <input type="radio" name="payment-method" value="bizum">
+          <span class="payment-option-body">
+            <strong>Bizum</strong>
+            <span>Envía el importe por Bizum y avísanos del pedido.</span>
+          </span>
+        </label>
+
+        <label class="payment-option">
+          <input type="radio" name="payment-method" value="transferencia">
+          <span class="payment-option-body">
+            <strong>Transferencia bancaria</strong>
+            <span>Transfiere el total a nuestra cuenta bancaria.</span>
+          </span>
+        </label>
+      </fieldset>
+
+      <!-- Edita aquí los datos de Bizum -->
+      <section id="payment-details-bizum" class="payment-details hidden">
+        <h2>Datos para Bizum</h2>
+        <p><strong>Teléfono Bizum:</strong> +34 610 266 411</p>
+        <p><strong>Concepto:</strong> Tu nombre + referencias de las piezas</p>
+        <p>
+          Cuando hayas enviado el Bizum, escríbenos a
+          <a href="mailto:info@artesaniabrass.es">info@artesaniabrass.es</a>
+          o por Instagram
+          <a href="https://www.instagram.com/artesania.brass/" target="_blank" rel="noopener noreferrer">@artesania.brass</a>
+          indicando qué has pedido.
+        </p>
+      </section>
+
+      <!-- Edita aquí los datos de transferencia -->
+      <section id="payment-details-transferencia" class="payment-details hidden">
+        <h2>Datos para transferencia</h2>
+        <p><strong>Titular:</strong> Rosa Alonso</p>
+        <p><strong>IBAN:</strong> ES00 0000 0000 0000 0000 0000</p>
+        <p><strong>Banco:</strong> Nombre del banco</p>
+        <p><strong>Concepto:</strong> Tu nombre + referencias de las piezas</p>
+        <p>
+          Cuando hayas hecho la transferencia, escríbenos a
+          <a href="mailto:info@artesaniabrass.es">info@artesaniabrass.es</a>
+          o por Instagram
+          <a href="https://www.instagram.com/artesania.brass/" target="_blank" rel="noopener noreferrer">@artesania.brass</a>
+          indicando qué has pedido.
+        </p>
+      </section>
+
+      <p id="payment-error" class="payment-error hidden"></p>
+
+      <div class="payment-actions">
+        <button id="payment-continue" class="payment-continue-button" type="button">
+          Continuar al pago con tarjeta
+        </button>
+      </div>
+    </div>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/config/supabase-config.js"></script>
+  <script src="js/config/stripe-config.js"></script>
+  <script src="js/pago.js"></script>
+</body>
+</html>

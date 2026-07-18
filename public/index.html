@@ -18,9 +18,9 @@
       <nav>
         <ul>
           <li><a href="#inicio">Inicio</a></li>
-          <li><a href="#categorias">Categorías</a></li>
-          <li><a href="#productos">Productos</a></li>
-          <li><a href="#sobre-nosotros">Sobre nosotros</a></li>
+          <li><a href="#categorias">Un poco de orden...</a></li>
+          <li><a href="#productos">Te proponemos</a></li>
+          <li><a href="#sobre-nosotros">Hola, soy Rosa</a></li>
           <li><a href="#contacto">Contacto</a></li>
         </ul>
       </nav>
@@ -35,13 +35,16 @@
     <div class="container hero-content">
       <h1>Joyería artesanal en latón y cobre</h1>
       <p>Hecha a mano por Rosa Alonso</p>
-      <a href="#productos" class="primary-button">Ver colección</a>
+      <a href="#productos" class="primary-button">Míralo!</a>
     </div>
   </section>
 
   <section id="categorias">
     <div class="container">
-      <h2>Un poco de orden...</h2>
+      <div class="categories-header">
+        <h2>Un poco de orden...</h2>
+        <p>Para que sea mas cómodo, hemos agrupado las piezas por categorías</p>
+      </div>
 
       <div class="categories-grid">
         <div class="category-card" data-categoria="Pendientes" role="button" tabindex="0">
@@ -97,7 +100,7 @@
   <section class="about" id="sobre-nosotros">
     <div class="container about-content">
       <div class="about-text">
-        <h2>Sobre la marca</h2>
+        <h2>Hola, soy Rosa</h2>
         <p>
           Somos una pequeña marca de joyería artesanal dedicada a crear piezas únicas,
           cuidadas y con personalidad.
@@ -120,8 +123,11 @@
   <footer id="contacto">
     <div class="container">
       <div class="footer-grid">
-        <div>
-          <h3>ArtesaniaBrass</h3>
+        <div class="footer-brand">
+          <div class="footer-brand-heading">
+            <img src="assets/images/logo.png" alt="" class="footer-logo">
+            <h3>ArtesaniaBrass</h3>
+          </div>
           <p>Joyería artesanal en latón y cobre hecha a mano por Rosa Alonso.</p>
         </div>
 
@@ -145,10 +151,39 @@
 
         <div>
           <h3>Contacto</h3>
-          <ul>
-            <li>Email: info@artesaniabrass.es</li>
-            <li>Instagram: @artesania.brass</li>
-            <li>Coma-ruga, Tarragona</li>
+          <ul class="footer-contact">
+            <li>
+              <a href="mailto:info@artesaniabrass.es" class="footer-contact-link">
+                <svg class="footer-icon" viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M4 6h16a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1zm0 2.2 8 5.2 8-5.2V8l-8 5.2L4 8v.2z"/>
+                </svg>
+                <span>info@artesaniabrass.es</span>
+              </a>
+            </li>
+            <li>
+              <a href="tel:+34000000000" class="footer-contact-link">
+                <svg class="footer-icon" viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M7.5 3.5c.4-.4 1-.5 1.5-.3l2.2 1c.5.2.8.7.8 1.2v2.2c0 .4-.2.8-.5 1.1L9.8 10.4c1.2 2.2 3 4 5.2 5.2l1.7-1.7c.3-.3.7-.5 1.1-.5h2.2c.5 0 1 .3 1.2.8l1 2.2c.2.5.1 1.1-.3 1.5l-1.5 1.5c-.4.4-1 .6-1.6.5C12.3 20.2 3.8 11.7 3 4.9c-.1-.6.1-1.2.5-1.6L7.5 3.5z"/>
+                </svg>
+                <span>+34 610 266 411</span>
+              </a>
+            </li>
+            <li>
+              <a href="https://www.instagram.com/artesania.brass/" target="_blank" rel="noopener noreferrer" class="footer-contact-link">
+                <svg class="footer-icon" viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M7 3h10a4 4 0 0 1 4 4v10a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4V7a4 4 0 0 1 4-4zm5 4.5A4.5 4.5 0 1 0 16.5 12 4.5 4.5 0 0 0 12 7.5zm0 2A2.5 2.5 0 1 1 9.5 12 2.5 2.5 0 0 1 12 9.5zM17.8 6.2a1 1 0 1 0 1 1 1 1 0 0 0-1-1z"/>
+                </svg>
+                <span>@artesania.brass</span>
+              </a>
+            </li>
+            <li>
+              <a href="https://maps.google.com/?q=Coma-ruga,+Tarragona" target="_blank" rel="noopener noreferrer" class="footer-contact-link">
+                <svg class="footer-icon" viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M12 2a7 7 0 0 0-7 7c0 5.25 7 13 7 13s7-7.75 7-13a7 7 0 0 0-7-7zm0 9.5A2.5 2.5 0 1 1 14.5 9 2.5 2.5 0 0 1 12 11.5z"/>
+                </svg>
+                <span>Coma-ruga, Tarragona</span>
+              </a>
+            </li>
           </ul>
         </div>
       </div>
@@ -195,7 +230,6 @@
       </div>
 
       <div class="product-detail-info">
-        <div id="product-detail-badges" class="product-detail-badges"></div>
         <h2 id="product-detail-title"></h2>
         <p id="product-detail-description" class="product-detail-description"></p>
         <p id="product-detail-measures" class="product-detail-measures hidden"></p>
@@ -209,7 +243,6 @@
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="js/config/supabase-config.js"></script>
-  <script src="js/config/stripe-config.js"></script>
   <script src="js/store.js"></script>
 </body>
 </html>

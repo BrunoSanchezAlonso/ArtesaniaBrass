@@ -65,14 +65,13 @@
                                 <th>Nombre</th>
                                 <th>Categoría</th>
                                 <th>Precio</th>
-                                <th>Disponibilidad</th>
                                 <th>Estado</th>
                                 <th>Acciones</th>
                             </tr>
                         </thead>
                         <tbody id="products-table-body">
                             <tr>
-                                <td colspan="9" class="loading-cell">Cargando productos...</td>
+                                <td colspan="8" class="loading-cell">Cargando productos...</td>
                             </tr>
                         </tbody>
                     </table>
@@ -143,13 +142,6 @@
                     <option value="Anillos">Anillos</option>
                     <option value="Conjuntos">Conjuntos</option>
                 </select>
-
-                <label for="product-disponibilidad">Disponibilidad</label>
-                <select id="product-disponibilidad" required>
-                    <option value="stock">En stock (pieza ya hecha)</option>
-                    <option value="bajo_demanda">Bajo demanda (se elabora al pedir)</option>
-                </select>
-                <p class="form-hint">Indica si la pieza está lista para enviar o hay que fabricarla.</p>
 
                 <label for="product-medidas">Medidas (opcional)</label>
                 <input type="text" id="product-medidas" placeholder="Ej.: 3 cm de largo · 1,5 cm de ancho">
