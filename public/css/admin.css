@@ -144,6 +144,12 @@ body {
     white-space: nowrap;
 }
 
+.order-modal-actions {
+    margin-top: 20px;
+    display: flex;
+    justify-content: flex-end;
+}
+
 .extra-images-list {
     display: flex;
     flex-wrap: wrap;
@@ -237,6 +243,11 @@ body {
 .status-inactive {
     background: #fce4ec;
     color: #c62828;
+}
+
+.status-pending {
+    background: #fff3e0;
+    color: #ef6c00;
 }
 
 .table-actions {

@@ -69,6 +69,8 @@ Configura los secretos en Supabase: `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`
 npx supabase secrets set RESEND_FROM="ArtesaniaBrass <pedidos@tudominio.com>"
 ```
 
+Pedidos Bizum/transferencia: se registran con pago pendiente y se confirman a mano desde el admin.
+
 ## Publicar en Netlify
 
 1. Sube el repositorio a GitHub.

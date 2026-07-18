@@ -180,7 +180,7 @@ function formatAddress(address) {
 async function loadAdminOrders() {
     ordersTableBody.innerHTML = `
         <tr>
-            <td colspan="6" class="loading-cell">Cargando pedidos...</td>
+            <td colspan="7" class="loading-cell">Cargando pedidos...</td>
         </tr>
     `;
 
@@ -193,6 +193,8 @@ async function loadAdminOrders() {
             customer_name,
             total_amount,
             status,
+            metodo_pago,
+            pago_confirmado,
             shipping_address,
             pedido_items (
                 producto_id,
@@ -206,7 +208,7 @@ async function loadAdminOrders() {
     if (error) {
         ordersTableBody.innerHTML = `
             <tr>
-                <td colspan="6" class="loading-cell">Error al cargar pedidos. ¿Has ejecutado la migración SQL?</td>
+                <td colspan="7" class="loading-cell">Error al cargar pedidos. ¿Has ejecutado la migración SQL?</td>
             </tr>
         `;
         showOrdersMessage("No se pudieron cargar los pedidos.", "error");
@@ -217,11 +219,25 @@ async function loadAdminOrders() {
     renderAdminOrders();
 }
 
+function getMetodoPagoLabel(metodoPago) {
+    if (metodoPago === "bizum") return "Bizum";
+    if (metodoPago === "transferencia") return "Transferencia";
+    return "Tarjeta";
+}
+
+function getPagoConfirmadoBadge(pedido) {
+    if (pedido.pago_confirmado) {
+        return '<span class="status-badge status-active">Confirmado</span>';
+    }
+
+    return '<span class="status-badge status-pending">Pendiente</span>';
+}
+
 function renderAdminOrders() {
     if (adminOrders.length === 0) {
         ordersTableBody.innerHTML = `
             <tr>
-                <td colspan="6" class="loading-cell">Todavía no hay pedidos registrados.</td>
+                <td colspan="7" class="loading-cell">Todavía no hay pedidos registrados.</td>
             </tr>
         `;
         return;
@@ -236,13 +252,19 @@ function renderAdminOrders() {
                 <span class="table-subtext">${pedido.customer_email ?? "Sin email"}</span>
             </td>
             <td>${formatPrice(pedido.total_amount)}</td>
+            <td>${getMetodoPagoLabel(pedido.metodo_pago)}</td>
+            <td>${getPagoConfirmadoBadge(pedido)}</td>
             <td>
-                <span class="status-badge status-active">${pedido.status}</span>
-            </td>
-            <td>
-                <button class="btn-secondary btn-small" data-action="view-order" data-id="${pedido.id}">
-                    Ver detalle
-                </button>
+                <div class="table-actions">
+                    <button class="btn-secondary btn-small" data-action="view-order" data-id="${pedido.id}">
+                        Ver detalle
+                    </button>
+                    ${!pedido.pago_confirmado ? `
+                        <button class="btn-primary btn-small" data-action="confirm-payment" data-id="${pedido.id}">
+                            Confirmar pago
+                        </button>
+                    ` : ""}
+                </div>
             </td>
         </tr>
     `).join("");
@@ -251,6 +273,12 @@ function renderAdminOrders() {
         button.addEventListener("click", () => {
             const pedido = adminOrders.find((item) => item.id === Number(button.dataset.id));
             openOrderModal(pedido);
+        });
+    });
+
+    ordersTableBody.querySelectorAll("[data-action='confirm-payment']").forEach((button) => {
+        button.addEventListener("click", () => {
+            confirmOrderPayment(Number(button.dataset.id));
         });
     });
 }
@@ -266,11 +294,19 @@ function formatOrderItemLabel(item) {
 function openOrderModal(pedido) {
     if (!pedido) return;
 
+    const confirmButtonHtml = !pedido.pago_confirmado
+        ? `<button class="btn-primary" type="button" id="confirm-payment-modal" data-id="${pedido.id}">
+                Confirmar pago
+           </button>`
+        : "";
+
     document.getElementById("order-modal-title").textContent = `Pedido #${pedido.id}`;
     document.getElementById("order-modal-body").innerHTML = `
         <p><strong>Fecha:</strong> ${formatDate(pedido.created_at)}</p>
         <p><strong>Cliente:</strong> ${pedido.customer_name ?? "Sin nombre"}</p>
         <p><strong>Email:</strong> ${pedido.customer_email ?? "Sin email"}</p>
+        <p><strong>Método de pago:</strong> ${getMetodoPagoLabel(pedido.metodo_pago)}</p>
+        <p><strong>Estado del pago:</strong> ${pedido.pago_confirmado ? "Confirmado" : "Pendiente de confirmar"}</p>
         <p><strong>Total:</strong> ${formatPrice(pedido.total_amount)}</p>
         <p><strong>Dirección de envío:</strong><br>${formatAddress(pedido.shipping_address)}</p>
         <h3>Productos</h3>
@@ -282,9 +318,47 @@ function openOrderModal(pedido) {
                 </li>
             `).join("")}
         </ul>
+        <div class="order-modal-actions">
+            ${confirmButtonHtml}
+        </div>
     `;
 
+    const confirmButton = document.getElementById("confirm-payment-modal");
+    if (confirmButton) {
+        confirmButton.addEventListener("click", () => {
+            confirmOrderPayment(Number(confirmButton.dataset.id));
+        });
+    }
+
     orderModal.classList.remove("hidden");
+}
+
+async function confirmOrderPayment(orderId) {
+    const pedido = adminOrders.find((item) => item.id === orderId);
+    if (!pedido || pedido.pago_confirmado) return;
+
+    const methodLabel = getMetodoPagoLabel(pedido.metodo_pago).toLowerCase();
+    const confirmed = confirm(
+        `¿Confirmas que has recibido el pago del pedido #${orderId} (${methodLabel})?`
+    );
+    if (!confirmed) return;
+
+    const { error } = await supabaseClient
+        .from("pedidos")
+        .update({
+            pago_confirmado: true,
+            status: "pagado"
+        })
+        .eq("id", orderId);
+
+    if (error) {
+        showOrdersMessage("No se pudo confirmar el pago.", "error");
+        return;
+    }
+
+    closeOrderModal();
+    showOrdersMessage(`Pago del pedido #${orderId} confirmado.`);
+    await loadAdminOrders();
 }
 
 function closeOrderModal() {

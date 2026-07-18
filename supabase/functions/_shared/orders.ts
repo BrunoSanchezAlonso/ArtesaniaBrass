@@ -10,13 +10,15 @@ export type OrderItem = {
 
 export type SavedOrder = {
   id: number;
-  stripe_session_id: string;
+  stripe_session_id: string | null;
   customer_email: string | null;
   customer_name: string | null;
   shipping_address: Record<string, unknown> | null;
   total_amount: number;
   currency: string;
   status: string;
+  metodo_pago?: string;
+  pago_confirmado?: boolean;
   email_enviado?: boolean;
   created_at: string;
   pedido_items: OrderItem[];
@@ -272,6 +274,8 @@ export async function fulfillCheckoutSession(
     total_amount: totalAmount,
     currency: session.currency ?? "eur",
     status: "pagado",
+    metodo_pago: "tarjeta",
+    pago_confirmado: true,
   };
 
   let pedidoId = existingOrder?.id;
@@ -317,6 +321,8 @@ export async function fulfillCheckoutSession(
       total_amount,
       currency,
       status,
+      metodo_pago,
+      pago_confirmado,
       email_enviado,
       created_at,
       pedido_items (

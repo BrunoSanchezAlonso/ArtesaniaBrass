@@ -890,6 +890,44 @@ footer a:hover {
     text-decoration: underline;
 }
 
+.payment-contact {
+    text-align: left;
+    margin-bottom: 24px;
+}
+
+.payment-contact.hidden {
+    display: none;
+}
+
+.payment-contact h2 {
+    font-size: 1.1rem;
+    margin-bottom: 8px;
+    text-align: left;
+    color: #8a5a44;
+}
+
+.payment-contact-hint {
+    color: #666;
+    margin-bottom: 14px;
+    font-size: 0.95rem;
+}
+
+.payment-contact label {
+    display: block;
+    margin-bottom: 6px;
+    font-weight: bold;
+    font-size: 0.9rem;
+}
+
+.payment-contact input {
+    width: 100%;
+    margin-bottom: 14px;
+    padding: 12px 14px;
+    border: 1px solid #d7c4b2;
+    border-radius: 10px;
+    font: inherit;
+}
+
 .payment-error {
     color: #c62828;
     margin-bottom: 16px;
