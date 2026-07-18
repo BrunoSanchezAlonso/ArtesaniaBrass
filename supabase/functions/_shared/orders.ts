@@ -96,13 +96,19 @@ async function sendEmail({
   html: string;
 }) {
   const apiKey = Deno.env.get("RESEND_API_KEY");
+  const from = Deno.env.get("RESEND_FROM");
+
   if (!apiKey) {
     console.log(`RESEND_API_KEY no configurada. Email omitido para ${to}`);
     return false;
   }
 
-  const from = Deno.env.get("RESEND_FROM") ??
-    "ArtesaniaBrass <onboarding@resend.dev>";
+  if (!from) {
+    console.error(
+      "RESEND_FROM no configurado. Usa un email de tu dominio verificado, p. ej. ArtesaniaBrass <pedidos@tudominio.com>",
+    );
+    return false;
+  }
 
   const response = await fetch("https://api.resend.com/emails", {
     method: "POST",
@@ -189,7 +195,7 @@ async function sendOrderEmails(order: SavedOrder) {
 
   if (!customerSent) {
     console.log(
-      `No se pudo enviar email al cliente (${order.customer_email}). En Resend de prueba solo se puede enviar al email verificado de tu cuenta.`,
+      `No se pudo enviar email al cliente (${order.customer_email}). Revisa RESEND_FROM y que el dominio esté verificado en Resend.`,
     );
   }
 

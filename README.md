@@ -61,7 +61,13 @@ npm run supabase:db:push
 npm run supabase:functions:deploy
 ```
 
-Configura los secretos en Supabase: `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `RESEND_API_KEY`, `STORE_OWNER_EMAIL`.
+Configura los secretos en Supabase: `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `RESEND_API_KEY`, `RESEND_FROM`, `STORE_OWNER_EMAIL`.
+
+`RESEND_FROM` debe ser un email de tu dominio verificado en Resend, por ejemplo:
+
+```bash
+npx supabase secrets set RESEND_FROM="ArtesaniaBrass <pedidos@tudominio.com>"
+```
 
 ## Publicar en Netlify
 
