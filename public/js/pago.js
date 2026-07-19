@@ -1,6 +1,6 @@
-const CART_STORAGE_KEY = "artesanibrass-cart";
+const PAYMENT_CART_KEY = "artesanibrass-cart";
 
-let cart = [];
+let paymentCart = [];
 let continueButton;
 let errorElement;
 let orderItemsElement;
@@ -12,12 +12,12 @@ let contactForm;
 let customerNameInput;
 let customerEmailInput;
 
-function formatPrice(precio) {
+function formatPaymentPrice(precio) {
     return `${Number(precio).toFixed(2).replace(".", ",")} €`;
 }
 
-function loadCart() {
-    const savedCart = localStorage.getItem(CART_STORAGE_KEY);
+function loadPaymentCart() {
+    const savedCart = localStorage.getItem(PAYMENT_CART_KEY);
 
     if (!savedCart) {
         return [];
@@ -31,14 +31,14 @@ function loadCart() {
     }
 }
 
-function getCartTotal() {
-    return cart.reduce((total, item) => total + Number(item.price), 0);
+function getPaymentCartTotal() {
+    return paymentCart.reduce((total, item) => total + Number(item.price), 0);
 }
 
-function getCartLineItems() {
+function getPaymentCartLineItems() {
     const grouped = {};
 
-    cart.forEach((item) => {
+    paymentCart.forEach((item) => {
         const key = `${item.productoId ?? item.name}`;
 
         if (!grouped[key]) {
@@ -97,16 +97,16 @@ function hideError() {
 }
 
 function renderSummary() {
-    const lineItems = getCartLineItems();
+    const lineItems = getPaymentCartLineItems();
 
     orderItemsElement.innerHTML = lineItems.map((item) => `
         <li>
             <span>${item.productId ? `#${item.productId} · ` : ""}${item.name}</span>
-            <span>${item.quantity} × ${formatPrice(item.price)}</span>
+            <span>${item.quantity} × ${formatPaymentPrice(item.price)}</span>
         </li>
     `).join("");
 
-    totalElement.textContent = formatPrice(getCartTotal());
+    totalElement.textContent = formatPaymentPrice(getPaymentCartTotal());
 }
 
 function updateMethodUI() {
@@ -152,7 +152,7 @@ async function startCardCheckout() {
                 Authorization: `Bearer ${SUPABASE_ANON_KEY}`
             },
             body: JSON.stringify({
-                items: getCartLineItems(),
+                items: getPaymentCartLineItems(),
                 successUrl,
                 cancelUrl
             })
@@ -173,7 +173,15 @@ async function startCardCheckout() {
 }
 
 function showOfflineSuccess(order, method) {
-    localStorage.removeItem(CART_STORAGE_KEY);
+    localStorage.removeItem(PAYMENT_CART_KEY);
+
+    if (typeof updateCart === "function") {
+        // Sincroniza el contador del header si store.js está cargado
+        if (typeof loadCart === "function") {
+            loadCart();
+        }
+        updateCart();
+    }
 
     const methodLabel = method === "bizum" ? "Bizum" : "transferencia";
 
@@ -231,7 +239,7 @@ async function completeOfflinePayment(method) {
                 metodoPago: method,
                 customerName,
                 customerEmail,
-                items: getCartLineItems()
+                items: getPaymentCartLineItems()
             })
         });
 
@@ -250,7 +258,7 @@ async function completeOfflinePayment(method) {
 }
 
 async function handleContinue() {
-    if (cart.length === 0) {
+    if (paymentCart.length === 0) {
         window.location.href = "index.html";
         return;
     }
@@ -303,9 +311,9 @@ function initPaymentPage() {
         return;
     }
 
-    cart = loadCart();
+    paymentCart = loadPaymentCart();
 
-    if (cart.length === 0) {
+    if (paymentCart.length === 0) {
         window.location.href = "index.html";
         return;
     }
