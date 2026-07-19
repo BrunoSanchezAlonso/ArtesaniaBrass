@@ -1,16 +1,16 @@
 const CART_STORAGE_KEY = "artesanibrass-cart";
 
-const continueButton = document.getElementById("payment-continue");
-const errorElement = document.getElementById("payment-error");
-const orderItemsElement = document.getElementById("payment-order-items");
-const totalElement = document.getElementById("payment-total");
-const bizumDetails = document.getElementById("payment-details-bizum");
-const transferDetails = document.getElementById("payment-details-transferencia");
-const contactForm = document.getElementById("payment-contact-form");
-const customerNameInput = document.getElementById("payment-customer-name");
-const customerEmailInput = document.getElementById("payment-customer-email");
-
 let cart = [];
+let continueButton;
+let errorElement;
+let orderItemsElement;
+let totalElement;
+let bizumDetails;
+let transferDetails;
+let tarjetaDetails;
+let contactForm;
+let customerNameInput;
+let customerEmailInput;
 
 function formatPrice(precio) {
     return `${Number(precio).toFixed(2).replace(".", ",")} €`;
@@ -62,7 +62,7 @@ function getSelectedMethod() {
 }
 
 function getOfflineOrderFunctionUrl() {
-    if (!isSupabaseConfigured()) {
+    if (typeof isSupabaseConfigured !== "function" || !isSupabaseConfigured()) {
         return null;
     }
 
@@ -78,14 +78,22 @@ function getCheckoutReturnUrls() {
     };
 }
 
+function setHidden(element, shouldHide) {
+    if (!element) return;
+    element.classList.toggle("hidden", shouldHide);
+    element.hidden = shouldHide;
+}
+
 function showError(message) {
+    if (!errorElement) return;
     errorElement.textContent = message;
-    errorElement.classList.remove("hidden");
+    setHidden(errorElement, false);
 }
 
 function hideError() {
+    if (!errorElement) return;
     errorElement.textContent = "";
-    errorElement.classList.add("hidden");
+    setHidden(errorElement, true);
 }
 
 function renderSummary() {
@@ -103,11 +111,11 @@ function renderSummary() {
 
 function updateMethodUI() {
     const method = getSelectedMethod();
-    const isOffline = method === "bizum" || method === "transferencia";
 
-    bizumDetails.classList.toggle("hidden", method !== "bizum");
-    transferDetails.classList.toggle("hidden", method !== "transferencia");
-    contactForm.classList.toggle("hidden", !isOffline);
+    setHidden(tarjetaDetails, method !== "tarjeta");
+    setHidden(bizumDetails, method !== "bizum");
+    setHidden(transferDetails, method !== "transferencia");
+    setHidden(contactForm, method === "tarjeta");
 
     if (method === "tarjeta") {
         continueButton.textContent = "Continuar al pago con tarjeta";
@@ -116,6 +124,9 @@ function updateMethodUI() {
     } else {
         continueButton.textContent = "Registrar pedido y he transferido";
     }
+
+    continueButton.disabled = false;
+    hideError();
 }
 
 async function startCardCheckout() {
@@ -123,7 +134,7 @@ async function startCardCheckout() {
         ? getCheckoutFunctionUrl()
         : null;
 
-    if (!isStripeConfigured() || !checkoutUrl) {
+    if (typeof isStripeConfigured !== "function" || !isStripeConfigured() || !checkoutUrl) {
         showError("Los pagos con tarjeta aún no están configurados.");
         return;
     }
@@ -157,7 +168,6 @@ async function startCardCheckout() {
     } catch (error) {
         console.error("Error en checkout:", error);
         showError(error.message || "No se pudo conectar con Stripe. Inténtalo de nuevo.");
-        continueButton.disabled = false;
         updateMethodUI();
     }
 }
@@ -235,7 +245,6 @@ async function completeOfflinePayment(method) {
     } catch (error) {
         console.error("Error al registrar pedido offline:", error);
         showError(error.message || "No se pudo registrar el pedido. Inténtalo de nuevo.");
-        continueButton.disabled = false;
         updateMethodUI();
     }
 }
@@ -256,7 +265,44 @@ async function handleContinue() {
     await completeOfflinePayment(method);
 }
 
+function bindPaymentMethodEvents() {
+    document.querySelectorAll('input[name="payment-method"]').forEach((input) => {
+        input.addEventListener("change", updateMethodUI);
+    });
+
+    document.querySelectorAll(".payment-option").forEach((option) => {
+        option.addEventListener("click", () => {
+            const input = option.querySelector('input[name="payment-method"]');
+            if (!input) return;
+
+            if (!input.checked) {
+                input.checked = true;
+            }
+
+            updateMethodUI();
+        });
+    });
+
+    continueButton.addEventListener("click", handleContinue);
+}
+
 function initPaymentPage() {
+    continueButton = document.getElementById("payment-continue");
+    errorElement = document.getElementById("payment-error");
+    orderItemsElement = document.getElementById("payment-order-items");
+    totalElement = document.getElementById("payment-total");
+    bizumDetails = document.getElementById("payment-details-bizum");
+    transferDetails = document.getElementById("payment-details-transferencia");
+    tarjetaDetails = document.getElementById("payment-details-tarjeta");
+    contactForm = document.getElementById("payment-contact-form");
+    customerNameInput = document.getElementById("payment-customer-name");
+    customerEmailInput = document.getElementById("payment-customer-email");
+
+    if (!continueButton || !orderItemsElement || !totalElement) {
+        console.error("Faltan elementos de la página de pago.");
+        return;
+    }
+
     cart = loadCart();
 
     if (cart.length === 0) {
@@ -265,13 +311,8 @@ function initPaymentPage() {
     }
 
     renderSummary();
+    bindPaymentMethodEvents();
     updateMethodUI();
-
-    document.querySelectorAll('input[name="payment-method"]').forEach((input) => {
-        input.addEventListener("change", updateMethodUI);
-    });
-
-    continueButton.addEventListener("click", handleContinue);
 }
 
 document.addEventListener("DOMContentLoaded", initPaymentPage);

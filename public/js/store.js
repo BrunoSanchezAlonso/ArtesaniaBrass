@@ -343,9 +343,16 @@ function updateCart() {
     const clearCartButton = document.getElementById("clear-cart-button");
     const checkoutButton = document.getElementById("checkout-button");
 
+    if (!cartCountElement || !cartItemsElement || !cartTotalElement) {
+        return;
+    }
+
     cartCountElement.textContent = cart.length;
     cartTotalElement.textContent = formatPrice(getCartTotal());
-    clearCartButton.disabled = cart.length === 0;
+
+    if (clearCartButton) {
+        clearCartButton.disabled = cart.length === 0;
+    }
 
     if (checkoutButton) {
         checkoutButton.disabled = cart.length === 0;
@@ -379,19 +386,26 @@ function updateCart() {
 }
 
 function initCart() {
+    const clearCartButton = document.getElementById("clear-cart-button");
+    const checkoutButton = document.getElementById("checkout-button");
+
     loadCart();
     updateCart();
 
-    document.getElementById("clear-cart-button").addEventListener("click", () => {
-        if (cart.length === 0) return;
+    if (clearCartButton) {
+        clearCartButton.addEventListener("click", () => {
+            if (cart.length === 0) return;
 
-        const confirmed = confirm("¿Seguro que quieres vaciar el carrito?");
-        if (confirmed) {
-            clearCart();
-        }
-    });
+            const confirmed = confirm("¿Seguro que quieres vaciar el carrito?");
+            if (confirmed) {
+                clearCart();
+            }
+        });
+    }
 
-    document.getElementById("checkout-button").addEventListener("click", handleCheckout);
+    if (checkoutButton) {
+        checkoutButton.addEventListener("click", handleCheckout);
+    }
 }
 
 async function initStore() {

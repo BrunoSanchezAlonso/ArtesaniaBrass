@@ -869,8 +869,10 @@ footer a:hover {
     border: 1px solid #e8dfd2;
 }
 
-.payment-details.hidden {
-    display: none;
+.payment-details.hidden,
+.payment-contact.hidden,
+.payment-error.hidden {
+    display: none !important;
 }
 
 .payment-details h2 {
@@ -893,10 +895,6 @@ footer a:hover {
 .payment-contact {
     text-align: left;
     margin-bottom: 24px;
-}
-
-.payment-contact.hidden {
-    display: none;
 }
 
 .payment-contact h2 {
@@ -931,10 +929,6 @@ footer a:hover {
 .payment-error {
     color: #c62828;
     margin-bottom: 16px;
-}
-
-.payment-error.hidden {
-    display: none;
 }
 
 .payment-actions {
