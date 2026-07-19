@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="stylesheet" href="css/store.css">
-  <title>Elegir forma de pago | ArtesaniaBrass</title>
+  <title>Confirmar pedido | ArtesaniaBrass</title>
 </head>
 <body>
   <header>
@@ -31,71 +31,65 @@
   </header>
 
   <main class="payment-page">
-    <div class="payment-card">
-      <h1>¿Cómo quieres pagar?</h1>
-      <p class="payment-intro">
-        Elige la forma de pago que más te convenga. El pago por web genera un pedido automáticamente.
-        Con Bizum o transferencia bancaria registraremos tu pedido y quedará pendiente hasta que confirmemos el pago.
+    <div class="payment-card" id="offline-order-card">
+      <a href="pago.html" class="payment-back">← Volver a formas de pago</a>
+
+      <h1 id="offline-page-title">Confirmar pedido</h1>
+      <p class="payment-intro" id="offline-page-intro">
+        Completa tus datos, revisa cómo pagar y confirma el pedido.
+        Te daremos un número de pedido y el pago quedará pendiente hasta que lo verifiquemos.
       </p>
 
-      <section class="payment-summary" aria-labelledby="payment-summary-title">
-        <h2 id="payment-summary-title">Resumen del pedido</h2>
-        <ul id="payment-order-items" class="order-summary-list"></ul>
+      <section class="payment-summary" aria-labelledby="offline-summary-title">
+        <h2 id="offline-summary-title">Resumen del pedido</h2>
+        <ul id="offline-order-items" class="order-summary-list"></ul>
         <p class="payment-total">
-          Total: <strong id="payment-total">0,00 €</strong>
+          Total: <strong id="offline-total">0,00 €</strong>
         </p>
       </section>
 
-      <fieldset class="payment-methods">
-        <legend class="visually-hidden">Forma de pago</legend>
+      <section class="payment-contact">
+        <h2>Tus datos</h2>
+        <p class="payment-contact-hint">
+          Los usaremos para identificar tu pedido y avisarte cuando confirmemos el pago.
+        </p>
+        <label for="offline-customer-name">Nombre</label>
+        <input type="text" id="offline-customer-name" autocomplete="name" placeholder="Tu nombre" required>
+        <label for="offline-customer-email">Email</label>
+        <input type="email" id="offline-customer-email" autocomplete="email" placeholder="tu@email.com" required>
+      </section>
 
-        <label class="payment-option">
-          <input type="radio" name="payment-method" value="tarjeta" checked>
-          <span class="payment-option-body">
-            <strong>Tarjeta (pago web)</strong>
-            <span>Pago seguro online. El pedido se confirma al instante.</span>
-          </span>
-        </label>
-
-        <label class="payment-option">
-          <input type="radio" name="payment-method" value="bizum">
-          <span class="payment-option-body">
-            <strong>Bizum</strong>
-            <span>Registra el pedido y paga por Bizum. Confirmaremos el pedido a mano lo antes posible.</span>
-          </span>
-        </label>
-
-        <label class="payment-option">
-          <input type="radio" name="payment-method" value="transferencia">
-          <span class="payment-option-body">
-            <strong>Transferencia bancaria</strong>
-            <span>Registra el pedido y paga por transferencia bancaria. Confirmaremos el pedido a mano lo antes posible.</span>
-          </span>
-        </label>
-      </fieldset> 
-
-      <section id="payment-details-tarjeta" class="payment-details">
-        <h2>Pago con tarjeta</h2>
+      <!-- Edita aquí los datos de Bizum -->
+      <section id="offline-details-bizum" class="payment-details hidden" hidden>
+        <h2>Cómo pagar por Bizum</h2>
+        <p><strong>Teléfono Bizum:</strong> +34 610 266 411</p>
+        <p><strong>Importe:</strong> <span id="offline-bizum-amount">0,00 €</span></p>
+        <p><strong>Concepto:</strong> Tu nombre + el número de pedido que te daremos al confirmar</p>
         <p>
-          Al continuar, te llevaremos a la pasarela segura de Stripe para
-          pagar con tarjeta.
+          Puedes enviar el Bizum después de confirmar el pedido y obtener el número de pedido.
+          Cuando hayamos recibido el pago, confirmaremos el pedido a mano lo antes posible.
         </p>
       </section>
 
-      <section id="payment-details-offline" class="payment-details hidden" hidden>
-        <h2>Siguiente paso: pago con Bizum o transferencia bancaria.</h2>
+      <!-- Edita aquí los datos de transferencia -->
+      <section id="offline-details-transferencia" class="payment-details hidden" hidden>
+        <h2>Cómo pagar por transferencia</h2>
+        <p><strong>Titular:</strong> Rosa Alonso García</p>
+        <p><strong>IBAN:</strong> ES39 1583 0001 1990 5805 3423</p>
+        <p><strong>Banco:</strong> Revolut</p>
+        <p><strong>Importe:</strong> <span id="offline-transfer-amount">0,00 €</span></p>
+        <p><strong>Concepto:</strong> Tu nombre + el número de pedido que te daremos al confirmar</p>
         <p>
-          En la siguiente página te pediremos tus datos, te mostraremos cómo
-          pagar y, al confirmar, generaremos tu <strong>número de pedido</strong>.
-          El pedido quedará pendiente hasta que comprobemos el pago.
+          Puedes hacer la transferencia después de confirmar el pedido y obtener el número de pedido.
+          Cuando hayamos recibido el pago, confirmaremos el pedido a mano lo antes posible.
         </p>
       </section>
 
-      <p id="payment-error" class="payment-error hidden" hidden></p>
+      <p id="offline-error" class="payment-error hidden" hidden></p>
 
       <div class="payment-actions">
-        <button id="payment-continue" class="payment-continue-button" type="button">
-          Continuar al pago con tarjeta
+        <button id="offline-confirm" class="payment-continue-button" type="button">
+          Confirmar pedido
         </button>
       </div>
     </div>
@@ -202,8 +196,7 @@
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="js/config/supabase-config.js"></script>
-  <script src="js/config/stripe-config.js"></script>
   <script src="js/store.js"></script>
-  <script src="js/pago.js"></script>
+  <script src="js/pedido-offline.js"></script>
 </body>
 </html>

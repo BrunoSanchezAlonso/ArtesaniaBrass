@@ -5,12 +5,8 @@ let continueButton;
 let errorElement;
 let orderItemsElement;
 let totalElement;
-let bizumDetails;
-let transferDetails;
 let tarjetaDetails;
-let contactForm;
-let customerNameInput;
-let customerEmailInput;
+let offlineDetails;
 
 function formatPaymentPrice(precio) {
     return `${Number(precio).toFixed(2).replace(".", ",")} €`;
@@ -61,14 +57,6 @@ function getSelectedMethod() {
     return selected ? selected.value : "tarjeta";
 }
 
-function getOfflineOrderFunctionUrl() {
-    if (typeof isSupabaseConfigured !== "function" || !isSupabaseConfigured()) {
-        return null;
-    }
-
-    return `${SUPABASE_URL}/functions/v1/create-offline-order`;
-}
-
 function getCheckoutReturnUrls() {
     const baseUrl = new URL("./", window.location.href).href;
 
@@ -111,18 +99,17 @@ function renderSummary() {
 
 function updateMethodUI() {
     const method = getSelectedMethod();
+    const isOffline = method === "bizum" || method === "transferencia";
 
     setHidden(tarjetaDetails, method !== "tarjeta");
-    setHidden(bizumDetails, method !== "bizum");
-    setHidden(transferDetails, method !== "transferencia");
-    setHidden(contactForm, method === "tarjeta");
+    setHidden(offlineDetails, !isOffline);
 
     if (method === "tarjeta") {
         continueButton.textContent = "Continuar al pago con tarjeta";
     } else if (method === "bizum") {
-        continueButton.textContent = "Registrar pedido y he enviado el Bizum";
+        continueButton.textContent = "Continuar con Bizum";
     } else {
-        continueButton.textContent = "Registrar pedido y he transferido";
+        continueButton.textContent = "Continuar con transferencia";
     }
 
     continueButton.disabled = false;
@@ -172,91 +159,6 @@ async function startCardCheckout() {
     }
 }
 
-function showOfflineSuccess(order, method) {
-    localStorage.removeItem(PAYMENT_CART_KEY);
-
-    if (typeof updateCart === "function") {
-        // Sincroniza el contador del header si store.js está cargado
-        if (typeof loadCart === "function") {
-            loadCart();
-        }
-        updateCart();
-    }
-
-    const methodLabel = method === "bizum" ? "Bizum" : "transferencia";
-
-    document.querySelector(".payment-card").innerHTML = `
-        <p class="checkout-status-badge cancel">Pago pendiente de confirmación</p>
-        <h1>Pedido #${order.id} registrado</h1>
-        <p>
-            Has elegido pagar por ${methodLabel}. Cuando confirmemos el ingreso,
-            prepararemos tu pedido con mucho cariño.
-        </p>
-        <p>
-            Si tienes cualquier duda, escríbenos a
-            <a href="mailto:info@artesaniabrass.es">info@artesaniabrass.es</a>
-            o por Instagram
-            <a href="https://www.instagram.com/artesania.brass/" target="_blank" rel="noopener noreferrer">@artesania.brass</a>.
-        </p>
-        <a href="index.html" class="payment-continue-button">Volver a la tienda</a>
-    `;
-}
-
-async function completeOfflinePayment(method) {
-    const customerName = customerNameInput.value.trim();
-    const customerEmail = customerEmailInput.value.trim();
-    const functionUrl = getOfflineOrderFunctionUrl();
-
-    if (!customerName) {
-        showError("Indica tu nombre para registrar el pedido.");
-        customerNameInput.focus();
-        return;
-    }
-
-    if (!customerEmail || !customerEmail.includes("@")) {
-        showError("Indica un email válido para registrar el pedido.");
-        customerEmailInput.focus();
-        return;
-    }
-
-    if (!functionUrl) {
-        showError("No hay conexión con el servidor para registrar el pedido.");
-        return;
-    }
-
-    continueButton.disabled = true;
-    continueButton.textContent = "Registrando pedido...";
-    hideError();
-
-    try {
-        const response = await fetch(functionUrl, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                Authorization: `Bearer ${SUPABASE_ANON_KEY}`
-            },
-            body: JSON.stringify({
-                metodoPago: method,
-                customerName,
-                customerEmail,
-                items: getPaymentCartLineItems()
-            })
-        });
-
-        const data = await response.json();
-
-        if (!response.ok || !data.order) {
-            throw new Error(data.error || "No se pudo registrar el pedido.");
-        }
-
-        showOfflineSuccess(data.order, method);
-    } catch (error) {
-        console.error("Error al registrar pedido offline:", error);
-        showError(error.message || "No se pudo registrar el pedido. Inténtalo de nuevo.");
-        updateMethodUI();
-    }
-}
-
 async function handleContinue() {
     if (paymentCart.length === 0) {
         window.location.href = "index.html";
@@ -270,7 +172,7 @@ async function handleContinue() {
         return;
     }
 
-    await completeOfflinePayment(method);
+    window.location.href = `pedido-offline.html?metodo=${encodeURIComponent(method)}`;
 }
 
 function bindPaymentMethodEvents() {
@@ -299,12 +201,8 @@ function initPaymentPage() {
     errorElement = document.getElementById("payment-error");
     orderItemsElement = document.getElementById("payment-order-items");
     totalElement = document.getElementById("payment-total");
-    bizumDetails = document.getElementById("payment-details-bizum");
-    transferDetails = document.getElementById("payment-details-transferencia");
     tarjetaDetails = document.getElementById("payment-details-tarjeta");
-    contactForm = document.getElementById("payment-contact-form");
-    customerNameInput = document.getElementById("payment-customer-name");
-    customerEmailInput = document.getElementById("payment-customer-email");
+    offlineDetails = document.getElementById("payment-details-offline");
 
     if (!continueButton || !orderItemsElement || !totalElement) {
         console.error("Faltan elementos de la página de pago.");
