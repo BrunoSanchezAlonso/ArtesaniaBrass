@@ -385,7 +385,7 @@ body.product-detail-open {
 
 @media (max-width: 768px) {
     .product-detail-dialog {
-        grid-template-columns: 1fr;
+        grid-template-columns: 2fr;
         padding: 20px;
     }
 }
@@ -465,6 +465,7 @@ body.product-detail-open {
 .about-image {
     border-radius: 16px;
     object-fit: cover;
+
 }
 
 /* =========================
