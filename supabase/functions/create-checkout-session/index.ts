@@ -124,6 +124,36 @@ serve(async (req) => {
       shipping_address_collection: {
         allowed_countries: ["ES", "PT", "FR", "DE", "IT", "AD"],
       },
+      shipping_options: [
+        {
+          shipping_rate_data: {
+            type: "fixed_amount",
+            fixed_amount: {
+              amount: 0,
+              currency: "eur",
+            },
+            display_name: "Envío gratis (territorio español, incluidas islas)",
+            delivery_estimate: {
+              minimum: { unit: "business_day", value: 2 },
+              maximum: { unit: "business_day", value: 5 },
+            },
+          },
+        },
+        {
+          shipping_rate_data: {
+            type: "fixed_amount",
+            fixed_amount: {
+              amount: 500,
+              currency: "eur",
+            },
+            display_name: "Envío fuera de España (5 €)",
+            delivery_estimate: {
+              minimum: { unit: "business_day", value: 4 },
+              maximum: { unit: "business_day", value: 10 },
+            },
+          },
+        },
+      ],
       phone_number_collection: {
         enabled: true,
       },

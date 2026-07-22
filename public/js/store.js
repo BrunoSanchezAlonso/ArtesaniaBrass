@@ -105,7 +105,7 @@ function renderProducts() {
                     data-nombre="${producto.nombre}"
                     data-precio="${producto.precio}"
                 >
-                    Añadir al carrito
+                    Me lo pido!
                 </button>
             </div>
         </article>

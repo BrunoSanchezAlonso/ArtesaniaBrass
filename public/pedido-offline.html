@@ -10,7 +10,9 @@
   <header>
     <div class="container navbar">
       <a href="index.html" class="logo">
-        <img src="assets/images/logo.png" alt="" class="logo-image">
+        <span class="logo-ring">
+          <img src="assets/images/logo.png" alt="" class="logo-image">
+        </span>
         <span class="logo-text">ArtesaniaBrass</span>
       </a>
 
@@ -57,6 +59,43 @@
         <input type="text" id="offline-customer-name" autocomplete="name" placeholder="Tu nombre" required>
         <label for="offline-customer-email">Email</label>
         <input type="email" id="offline-customer-email" autocomplete="email" placeholder="tu@email.com" required>
+      </section>
+
+      <section class="payment-contact">
+        <h2>Dirección de envío</h2>
+        <p class="payment-contact-hint">
+          Envío gratis en territorio español (incluidas islas).
+          Fuera de España: 5 €.
+        </p>
+        <label for="offline-address-line1">Dirección</label>
+        <input type="text" id="offline-address-line1" autocomplete="address-line1" placeholder="Calle y número" required>
+        <label for="offline-address-line2">Piso, puerta u otro dato (opcional)</label>
+        <input type="text" id="offline-address-line2" autocomplete="address-line2" placeholder="Piso, puerta...">
+        <div class="payment-contact-row">
+          <div>
+            <label for="offline-address-postal">Código postal</label>
+            <input type="text" id="offline-address-postal" autocomplete="postal-code" placeholder="08001" required>
+          </div>
+          <div>
+            <label for="offline-address-city">Ciudad</label>
+            <input type="text" id="offline-address-city" autocomplete="address-level2" placeholder="Barcelona" required>
+          </div>
+        </div>
+        <label for="offline-address-state">Provincia / región (opcional)</label>
+        <input type="text" id="offline-address-state" autocomplete="address-level1" placeholder="Barcelona">
+        <label for="offline-address-country">País</label>
+        <select id="offline-address-country" autocomplete="country">
+          <option value="ES" selected>España</option>
+          <option value="AD">Andorra</option>
+          <option value="PT">Portugal</option>
+          <option value="FR">Francia</option>
+          <option value="DE">Alemania</option>
+          <option value="IT">Italia</option>
+          <option value="OTRO">Otro país</option>
+        </select>
+        <p id="offline-shipping-note" class="payment-contact-hint">
+          Envío gratis incluido.
+        </p>
       </section>
 
       <!-- Edita aquí los datos de Bizum -->

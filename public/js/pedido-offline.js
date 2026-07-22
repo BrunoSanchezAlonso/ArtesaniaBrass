@@ -1,4 +1,5 @@
 const OFFLINE_CART_KEY = "artesanibrass-cart";
+const INTERNATIONAL_SHIPPING_EUR = 5;
 
 let offlineCart = [];
 let metodoPago = "bizum";
@@ -8,6 +9,13 @@ let orderItemsElement;
 let totalElement;
 let customerNameInput;
 let customerEmailInput;
+let addressLine1Input;
+let addressLine2Input;
+let addressPostalInput;
+let addressCityInput;
+let addressStateInput;
+let addressCountrySelect;
+let shippingNoteElement;
 let bizumDetails;
 let transferDetails;
 let bizumAmount;
@@ -34,8 +42,17 @@ function loadOfflineCart() {
     }
 }
 
-function getOfflineCartTotal() {
+function getOfflineCartSubtotal() {
     return offlineCart.reduce((total, item) => total + Number(item.price), 0);
+}
+
+function getShippingCost() {
+    const country = addressCountrySelect?.value || "ES";
+    return country === "ES" ? 0 : INTERNATIONAL_SHIPPING_EUR;
+}
+
+function getOfflineCartTotal() {
+    return getOfflineCartSubtotal() + getShippingCost();
 }
 
 function getOfflineCartLineItems() {
@@ -57,6 +74,17 @@ function getOfflineCartLineItems() {
     });
 
     return Object.values(grouped);
+}
+
+function getShippingAddress() {
+    return {
+        line1: addressLine1Input.value.trim(),
+        line2: addressLine2Input.value.trim() || null,
+        postal_code: addressPostalInput.value.trim(),
+        city: addressCityInput.value.trim(),
+        state: addressStateInput.value.trim() || null,
+        country: addressCountrySelect.value
+    };
 }
 
 function getMetodoFromUrl() {
@@ -96,18 +124,38 @@ function hideError() {
     setHidden(errorElement, true);
 }
 
+function updateShippingNote() {
+    const shippingCost = getShippingCost();
+
+    if (!shippingNoteElement) return;
+
+    shippingNoteElement.textContent = shippingCost === 0
+        ? "Envío gratis incluido."
+        : `Se añadirán ${formatOfflinePrice(shippingCost)} de gastos de envío.`;
+}
+
 function renderSummary() {
     const lineItems = getOfflineCartLineItems();
+    const shippingCost = getShippingCost();
     const total = formatOfflinePrice(getOfflineCartTotal());
 
-    orderItemsElement.innerHTML = lineItems.map((item) => `
+    const itemsHtml = lineItems.map((item) => `
         <li>
             <span>${item.productId ? `#${item.productId} · ` : ""}${item.name}</span>
             <span>${item.quantity} × ${formatOfflinePrice(item.price)}</span>
         </li>
     `).join("");
 
+    const shippingHtml = `
+        <li>
+            <span>Envío</span>
+            <span>${shippingCost === 0 ? "Gratis" : formatOfflinePrice(shippingCost)}</span>
+        </li>
+    `;
+
+    orderItemsElement.innerHTML = itemsHtml + shippingHtml;
     totalElement.textContent = total;
+    updateShippingNote();
 
     if (bizumAmount) {
         bizumAmount.textContent = total;
@@ -127,8 +175,8 @@ function applyMethodUI() {
         : "Pedido con transferencia";
 
     pageIntro.textContent = isBizum
-        ? "Completa tus datos, revisa los datos de Bizum y confirma el pedido. Te daremos un número de pedido y quedará pendiente de pago."
-        : "Completa tus datos, revisa los datos bancarios y confirma el pedido. Te daremos un número de pedido y quedará pendiente de pago.";
+        ? "Completa tus datos y dirección, revisa los datos de Bizum y confirma el pedido. Te daremos un número de pedido y quedará pendiente de pago."
+        : "Completa tus datos y dirección, revisa los datos bancarios y confirma el pedido. Te daremos un número de pedido y quedará pendiente de pago.";
 
     document.title = `Pedido con ${methodLabel} | ArtesaniaBrass`;
 
@@ -190,24 +238,52 @@ function showSuccess(order) {
         <p class="checkout-status-badge cancel">Pago pendiente</p>
         <h1>Pedido #${order.id} creado</h1>
         <p>
-            
             Tu pedido por ${methodLabel} ya está registrado.
-            El total es <strong>${total}</strong>. Ahora solo falta realizar el pago.<br><br>
+            El total es <strong>${total}</strong>. Ahora solo falta realizar el pago.
         </p>
         ${getPaymentDetailsHtml(order.id, total)}
         <p>
             Si tienes dudas, escríbenos a
             <a href="mailto:info@artesaniabrass.es">info@artesaniabrass.es</a>
             o por Instagram
-            <a href="https://www.instagram.com/artesania.brass/" target="_blank" rel="noopener noreferrer">@artesania.brass</a>.<br><br>
+            <a href="https://www.instagram.com/artesania.brass/" target="_blank" rel="noopener noreferrer">@artesania.brass</a>.
         </p>
         <a href="index.html" class="payment-continue-button">Volver a la tienda</a>
     `;
 }
 
+function validateShippingAddress(address) {
+    if (!address.line1) {
+        showError("Indica la dirección de envío.");
+        addressLine1Input.focus();
+        return false;
+    }
+
+    if (!address.postal_code) {
+        showError("Indica el código postal.");
+        addressPostalInput.focus();
+        return false;
+    }
+
+    if (!address.city) {
+        showError("Indica la ciudad.");
+        addressCityInput.focus();
+        return false;
+    }
+
+    if (!address.country) {
+        showError("Indica el país.");
+        addressCountrySelect.focus();
+        return false;
+    }
+
+    return true;
+}
+
 async function confirmOfflineOrder() {
     const customerName = customerNameInput.value.trim();
     const customerEmail = customerEmailInput.value.trim();
+    const shippingAddress = getShippingAddress();
     const functionUrl = getOfflineOrderFunctionUrl();
 
     if (!customerName) {
@@ -219,6 +295,10 @@ async function confirmOfflineOrder() {
     if (!customerEmail || !customerEmail.includes("@")) {
         showError("Indica un email válido para registrar el pedido.");
         customerEmailInput.focus();
+        return;
+    }
+
+    if (!validateShippingAddress(shippingAddress)) {
         return;
     }
 
@@ -242,6 +322,7 @@ async function confirmOfflineOrder() {
                 metodoPago,
                 customerName,
                 customerEmail,
+                shippingAddress,
                 items: getOfflineCartLineItems()
             })
         });
@@ -275,6 +356,13 @@ function initOfflineOrderPage() {
     totalElement = document.getElementById("offline-total");
     customerNameInput = document.getElementById("offline-customer-name");
     customerEmailInput = document.getElementById("offline-customer-email");
+    addressLine1Input = document.getElementById("offline-address-line1");
+    addressLine2Input = document.getElementById("offline-address-line2");
+    addressPostalInput = document.getElementById("offline-address-postal");
+    addressCityInput = document.getElementById("offline-address-city");
+    addressStateInput = document.getElementById("offline-address-state");
+    addressCountrySelect = document.getElementById("offline-address-country");
+    shippingNoteElement = document.getElementById("offline-shipping-note");
     bizumDetails = document.getElementById("offline-details-bizum");
     transferDetails = document.getElementById("offline-details-transferencia");
     bizumAmount = document.getElementById("offline-bizum-amount");
@@ -291,6 +379,7 @@ function initOfflineOrderPage() {
 
     applyMethodUI();
     renderSummary();
+    addressCountrySelect.addEventListener("change", renderSummary);
     confirmButton.addEventListener("click", confirmOfflineOrder);
 }
 

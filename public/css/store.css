@@ -57,7 +57,7 @@ h2 {
 
 header {
     background-color: #fff;
-    border-bottom: 1px solid #e8dfd2;
+    border-bottom: 4px solid #8a5a44;
     position: sticky;
     top: 0;
     z-index: 1000;
@@ -79,13 +79,46 @@ header {
     color: #8a5a44;
 }
 
+
+.logo-ring {
+    position: relative;
+    display: inline-flex;
+    flex-shrink: 0;
+    border-radius: 50%;
+    line-height: 0;
+    transform: translateY(10px);
+}
+
 .logo-image {
     width: 120px;
     height: 120px;
     border-radius: 50%;
     object-fit: cover;
-    flex-shrink: 0;
-    transform: translateY(10px);
+    display: block;
+}
+
+/* Arco inferior tipo “sonrisa”, grosor constante 4px */
+.logo-ring::after {
+    content: "";
+    position: absolute;
+    inset: -4px;
+    border-radius: 50%;
+    pointer-events: none;
+    background: conic-gradient(
+        from 118deg,
+        #8a5a44 0deg 123deg,
+        transparent 123deg 360deg
+    );
+    -webkit-mask: radial-gradient(
+        farthest-side,
+        transparent calc(100% - 4px),
+        #000 calc(100% - 4px)
+    );
+    mask: radial-gradient(
+        farthest-side,
+        transparent calc(100% - 4px),
+        #000 calc(100% - 4px)
+    );
 }
 
 .logo-text {
@@ -385,7 +418,7 @@ body.product-detail-open {
 
 @media (max-width: 768px) {
     .product-detail-dialog {
-        grid-template-columns: 2fr;
+        grid-template-columns: 1fr;
         padding: 20px;
     }
 }
@@ -418,8 +451,15 @@ body.product-detail-open {
 
 .product-description {
     font-size: 0.9rem;
+    line-height: 1.5;
     color: #666;
     margin-bottom: 12px;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    height: calc(1.5em * 2);
 }
 
 .product-price {
@@ -438,6 +478,18 @@ body.product-detail-open {
 }
 
 .add-to-cart:hover {
+    background-color: #6f4635;
+}
+
+.primary-button {
+    width: 80%;
+    background-color: #8a5a44;
+    color: #fff;
+    padding: 12px;
+    border-radius: 25px;
+}
+
+.primary-button:hover {
     background-color: #6f4635;
 }
 
@@ -460,6 +512,7 @@ body.product-detail-open {
 .about-text p {
     margin-bottom: 15px;
     color: #fff;
+    text-align: center;
 }
 
 .about-image {
@@ -918,13 +971,27 @@ footer a:hover {
     font-size: 0.9rem;
 }
 
-.payment-contact input {
+.payment-contact input,
+.payment-contact select {
     width: 100%;
     margin-bottom: 14px;
     padding: 12px 14px;
     border: 1px solid #d7c4b2;
     border-radius: 10px;
     font: inherit;
+    background: #fff;
+}
+
+.payment-contact-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+}
+
+@media (max-width: 600px) {
+    .payment-contact-row {
+        grid-template-columns: 1fr;
+    }
 }
 
 .payment-error {
@@ -1023,8 +1090,7 @@ footer a:hover {
     color: #8a5a44;
     font-weight: bold;
     letter-spacing: 0.04em;
-    text-transform: uppercase;
-    font-size: 0.85rem;
+    font-size: 2rem;
     margin-bottom: 10px;
 }
 
@@ -1036,8 +1102,35 @@ footer a:hover {
 
 .info-page-intro {
     color: #666;
-    margin-bottom: 36px;
+    margin-bottom: 28px;
     font-size: 1.05rem;
+}
+
+.info-page-photos {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    margin-bottom: 36px;
+}
+
+.info-page-photos figure {
+    margin: 0;
+}
+
+.info-page-photos img {
+    width: 100%;
+    height: 300px;
+    object-fit: cover;
+    display: block;
+    border-radius: 14px;
+}
+
+.info-page-photos figcaption {
+    margin-top: 10px;
+    color: #868686;
+    font-size: 0.7rem;
+    line-height: 1.4;
+    text-align: center;
 }
 
 .faq-list {
@@ -1112,7 +1205,32 @@ footer a:hover {
     background: #fff;
     border: 1px solid #e8dfd2;
     border-radius: 14px;
-    padding: 22px 20px;
+    padding: 22px 24px;
+}
+
+.policy-notice {
+    background: #f3ebe4;
+    border: 2px solid #8a5a44;
+    border-radius: 14px;
+    padding: 22px 24px;
+}
+
+.policy-notice-label {
+    display: inline-block;
+    margin-bottom: 10px;
+    color: #8a5a44;
+    font-weight: bold;
+    font-size: 0.8rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+}
+
+.policy-notice p:last-child {
+    color: #2c2c2c;
+    font-size: 1.05rem;
+    font-weight: 600;
+    line-height: 1.5;
+    margin: 0;
 }
 
 .policy-block h2 {
@@ -1173,8 +1291,13 @@ footer a:hover {
     .products-grid,
     .categories-grid,
     .about-content,
-    .footer-grid {
+    .footer-grid,
+    .info-page-photos {
         grid-template-columns: 1fr;
+    }
+
+    .info-page-photos img {
+        height: 200px;
     }
 
     .hero h1 {

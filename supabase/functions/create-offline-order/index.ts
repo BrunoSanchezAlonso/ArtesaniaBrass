@@ -73,6 +73,57 @@ function validateItems(items: unknown): CartItem[] {
   });
 }
 
+function validateShippingAddress(address: unknown) {
+  if (!address || typeof address !== "object") {
+    throw new Error("Indica la dirección de envío.");
+  }
+
+  const data = address as Record<string, unknown>;
+  const line1 = typeof data.line1 === "string" ? data.line1.trim() : "";
+  const line2 = typeof data.line2 === "string" ? data.line2.trim() : "";
+  const postalCode = typeof data.postal_code === "string"
+    ? data.postal_code.trim()
+    : "";
+  const city = typeof data.city === "string" ? data.city.trim() : "";
+  const state = typeof data.state === "string" ? data.state.trim() : "";
+  const country = typeof data.country === "string"
+    ? data.country.trim().toUpperCase()
+    : "";
+
+  if (!line1 || line1.length > 200) {
+    throw new Error("Indica una dirección válida.");
+  }
+
+  if (line2.length > 200) {
+    throw new Error("El complemento de dirección no es válido.");
+  }
+
+  if (!postalCode || postalCode.length > 20) {
+    throw new Error("Indica un código postal válido.");
+  }
+
+  if (!city || city.length > 100) {
+    throw new Error("Indica una ciudad válida.");
+  }
+
+  if (state.length > 100) {
+    throw new Error("La provincia o región no es válida.");
+  }
+
+  if (!country || country.length > 10) {
+    throw new Error("Indica un país válido.");
+  }
+
+  return {
+    line1,
+    line2: line2 || null,
+    postal_code: postalCode,
+    city,
+    state: state || null,
+    country,
+  };
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
@@ -107,11 +158,14 @@ serve(async (req) => {
       throw new Error("Indica un email válido.");
     }
 
+    const shippingAddress = validateShippingAddress(body.shippingAddress);
     const items = validateItems(body.items);
-    const totalAmount = items.reduce(
+    const itemsTotal = items.reduce(
       (sum, item) => sum + item.price * item.quantity,
       0,
     );
+    const shippingCost = shippingAddress.country === "ES" ? 0 : 5;
+    const totalAmount = itemsTotal + shippingCost;
 
     const supabase = getSupabaseAdmin();
     const { data: insertedOrder, error: insertError } = await supabase
@@ -120,7 +174,7 @@ serve(async (req) => {
         stripe_session_id: null,
         customer_email: customerEmail,
         customer_name: customerName,
-        shipping_address: null,
+        shipping_address: shippingAddress,
         total_amount: totalAmount,
         currency: "eur",
         status: "pendiente_pago",
@@ -135,15 +189,27 @@ serve(async (req) => {
       throw new Error(insertError.message);
     }
 
+    const orderItems = items.map((item) => ({
+      pedido_id: insertedOrder.id,
+      producto_id: item.productId ?? null,
+      nombre: item.name,
+      precio_unitario: item.price,
+      cantidad: item.quantity,
+    }));
+
+    if (shippingCost > 0) {
+      orderItems.push({
+        pedido_id: insertedOrder.id,
+        producto_id: null,
+        nombre: "Gastos de envío (fuera de España)",
+        precio_unitario: shippingCost,
+        cantidad: 1,
+      });
+    }
+
     const { error: itemsError } = await supabase
       .from("pedido_items")
-      .insert(items.map((item) => ({
-        pedido_id: insertedOrder.id,
-        producto_id: item.productId ?? null,
-        nombre: item.name,
-        precio_unitario: item.price,
-        cantidad: item.quantity,
-      })));
+      .insert(orderItems);
 
     if (itemsError) {
       throw new Error(itemsError.message);
@@ -154,6 +220,7 @@ serve(async (req) => {
         id: insertedOrder.id,
         metodo_pago: metodoPago,
         total_amount: totalAmount,
+        shipping_cost: shippingCost,
         pago_confirmado: false,
       },
     });
