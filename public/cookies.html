@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="css/store.css">
+  <title>Política de cookies | ArtesaniaBrass</title>
+</head>
+<body>
+  <header>
+    <div class="container navbar">
+      <a href="index.html" class="logo">
+        <span class="logo-ring">
+          <img src="assets/images/logo.png" alt="" class="logo-image">
+        </span>
+        <span class="logo-text">ArtesaniaBrass</span>
+      </a>
+
+      <nav>
+        <ul>
+          <li><a href="index.html#categorias">Un poco de orden...</a></li>
+          <li><a href="index.html#productos">Te proponemos</a></li>
+          <li><a href="index.html#sobre-nosotros">Hola, soy Rosa</a></li>
+          <li><a href="index.html#contacto">Contacto</a></li>
+        </ul>
+      </nav>
+
+      <button class="cart-button" onclick="openCart()">
+        Me lo pido! <span id="cart-count">0</span>
+      </button>
+    </div>
+  </header>
+
+  <main class="info-page">
+    <div class="container info-page-content">
+      <p class="info-page-eyebrow">Política de cookies	</p>
+      <p class="info-page-intro">
+        Esta web usa de forma limitada cookies y almacenamiento local, solo
+        para que la tienda funcione. No usamos cookies de publicidad ni de
+        analítica de terceros.
+      </p>
+
+      <div class="policy-sections">
+        <section class="policy-block">
+          <h2>1. Qué usamos</h2>
+          <ul class="policy-list">
+            <li>
+              <strong>Almacenamiento local del carrito</strong>
+              (<code>artesanibrass-cart</code>) en tu navegador, para recordar
+              los productos que has añadido. No es una cookie HTTP, pero cumple
+              una función similar.
+            </li>
+            <li>
+              <strong>Preferencia del aviso de cookies</strong>
+              (también en almacenamiento local), para no mostrarte el aviso
+              cada vez.
+            </li>
+            <li>
+              <strong>Cookies técnicas de Stripe</strong> cuando pagas con
+              tarjeta / Apple Pay / Google Pay en la pasarela de Stripe
+              (dominio de Stripe). Son necesarias para completar el pago de
+              forma segura.
+            </li>
+            <li>
+              <strong>Sesión de administración</strong> (Supabase Auth), solo
+              si alguien inicia sesión en el panel admin. No afecta a la
+              compra normal de clientes.
+            </li>
+          </ul>
+        </section>
+
+        <section class="policy-block">
+          <h2>2. Finalidad</h2>
+          <p>
+            Mantener el carrito, permitir el pago seguro y recordar que ya has
+            visto el aviso informativo de cookies. No elaboramos perfiles
+            publicitarios ni medimos audiencias con herramientas tipo Google
+            Analytics o Meta Pixel.
+          </p>
+        </section>
+
+        <section class="policy-block">
+          <h2>3. Base legal</h2>
+          <p>
+            Las cookies y el almacenamiento estrictamente necesarios para el
+            servicio solicitado (carrito y pago) se basan en la prestación del
+            servicio / interés legítimo técnico. El aviso informativo te
+            permite conocer este uso.
+          </p>
+        </section>
+
+        <section class="policy-block">
+          <h2>4. Cómo gestionarlos</h2>
+          <p>
+            Puedes borrar el almacenamiento local y las cookies desde la
+            configuración de tu navegador. Si eliminas el carrito guardado,
+            perderás los productos añadidos hasta ese momento.
+          </p>
+          <p>
+            Para más detalle sobre privacidad de datos personales, consulta la
+            <a href="privacidad.html">política de privacidad</a>.
+          </p>
+        </section>
+
+        <section class="policy-block">
+          <h2>5. Actualizaciones</h2>
+          <p>
+            Si en el futuro se incorporaran cookies de analítica o marketing,
+            se actualizará esta política y, cuando sea necesario, se pedirá
+            consentimiento.
+          </p>
+        </section>
+      </div>
+
+      <p class="info-page-cta">
+        Última actualización: julio 2026 ·
+        <a href="index.html">Volver a la tienda</a>
+      </p>
+    </div>
+  </main>
+
+  <footer id="contacto">
+    <div class="container">
+      <div class="footer-grid">
+        <div class="footer-brand">
+          <a href="index.html" class="footer-brand-heading">
+            <img src="assets/images/logo.png" alt="" class="footer-logo">
+            <h3>ArtesaniaBrass</h3>
+          </a>
+          <p>Joyería artesanal en latón y cobre hecha a mano por Rosa Alonso.</p>
+        </div>
+
+        <div>
+          <h3>Tienda</h3>
+          <ul>
+            <li><a href="index.html#productos">Productos</a></li>
+            <li><a href="index.html#categorias">Categorías</a></li>
+            <li><a href="cuidado.html">El cuidado de tu joya</a></li>
+          </ul>
+        </div>
+
+        <div>
+          <h3>Ayuda</h3>
+          <ul>
+            <li><a href="envios.html">Envíos</a></li>
+            <li><a href="devoluciones.html">Devoluciones</a></li>
+            <li><a href="faq.html">Preguntas frecuentes</a></li>
+          </ul>
+        </div>
+
+        <div>
+          <h3>Contacto</h3>
+          <ul class="footer-contact">
+            <li>
+              <a href="mailto:info@artesaniabrass.es" class="footer-contact-link">
+                <span>info@artesaniabrass.es</span>
+              </a>
+            </li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="footer-bottom">
+        <p>
+          &copy; 2026 ArtesaniaBrass.
+          <a href="aviso-legal.html">Aviso legal</a> ·
+          <a href="privacidad.html">Privacidad</a> ·
+          <a href="cookies.html">Cookies</a>
+        </p>
+      </div>
+    </div>
+  </footer>
+
+  <aside class="cart-sidebar" id="cart-sidebar">
+    <div class="cart-header">
+      <h2>Me lo pido!</h2>
+      <button class="close-cart" onclick="closeCart()">×</button>
+    </div>
+    <div class="cart-items" id="cart-items">
+      <p class="cart-empty">Tu carrito está vacío.</p>
+    </div>
+    <div class="cart-footer">
+      <p class="cart-total">Total: <span id="cart-total">0,00 €</span></p>
+      <button class="clear-cart-button" id="clear-cart-button" type="button">Vaciar carrito</button>
+      <button class="checkout-button" id="checkout-button" type="button" disabled>Finalizar compra</button>
+    </div>
+  </aside>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/config/supabase-config.js"></script>
+  <script src="js/store.js"></script>
+</body>
+</html>

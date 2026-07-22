@@ -453,6 +453,45 @@ function initCart() {
     }
 }
 
+function initCookieNotice() {
+    const storageKey = "artesanibrass-cookies-ack";
+
+    if (localStorage.getItem(storageKey) === "1") {
+        return;
+    }
+
+    if (document.getElementById("cookie-notice")) {
+        return;
+    }
+
+    const notice = document.createElement("div");
+    notice.id = "cookie-notice";
+    notice.className = "cookie-notice";
+    notice.setAttribute("role", "dialog");
+    notice.setAttribute("aria-label", "Aviso de cookies");
+    notice.innerHTML = `
+        <p>
+            Usamos almacenamiento local para el carrito y cookies técnicas
+            necesarias para el pago seguro (Stripe). No usamos cookies de
+            publicidad.
+            <a href="cookies.html">Más información</a>
+        </p>
+        <button type="button" class="cookie-notice-button" id="cookie-notice-accept">
+            Entendido
+        </button>
+    `;
+
+    document.body.appendChild(notice);
+
+    const acceptButton = document.getElementById("cookie-notice-accept");
+    if (acceptButton) {
+        acceptButton.addEventListener("click", () => {
+            localStorage.setItem(storageKey, "1");
+            notice.remove();
+        });
+    }
+}
+
 async function initStore() {
     productos = await loadProducts();
     initMobileNav();
@@ -460,6 +499,7 @@ async function initStore() {
     initFilters();
     initCategoryCards();
     initProductDetail();
+    initCookieNotice();
     renderProducts();
 }
 
