@@ -346,7 +346,7 @@ function initOfflineOrderPage() {
     metodoPago = getMetodoFromUrl();
 
     if (!metodoPago) {
-        window.location.href = "pago.html";
+        window.location.href = "pago";
         return;
     }
 

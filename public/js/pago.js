@@ -77,9 +77,10 @@ function getSelectedMethod() {
 function getCheckoutReturnUrls() {
     const baseUrl = new URL("./", window.location.href).href;
 
+    // Sin ".html": con cleanUrls, servir redirige y puede perder ?metodo / ?session_id
     return {
-        successUrl: `${baseUrl}success.html?session_id={CHECKOUT_SESSION_ID}`,
-        cancelUrl: `${baseUrl}pago.html`
+        successUrl: `${baseUrl}success?session_id={CHECKOUT_SESSION_ID}`,
+        cancelUrl: `${baseUrl}pago`
     };
 }
 
@@ -200,7 +201,7 @@ async function startCardCheckout() {
 
 async function handleContinue() {
     if (paymentCart.length === 0) {
-        window.location.href = "index.html";
+        window.location.href = "./";
         return;
     }
 
@@ -211,7 +212,7 @@ async function handleContinue() {
         return;
     }
 
-    window.location.href = `pedido-offline.html?metodo=${encodeURIComponent(method)}`;
+    window.location.href = `pedido-offline?metodo=${encodeURIComponent(method)}`;
 }
 
 function bindPaymentMethodEvents() {
