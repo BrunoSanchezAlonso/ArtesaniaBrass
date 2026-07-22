@@ -385,6 +385,51 @@ function updateCart() {
     });
 }
 
+function initMobileNav() {
+    const navbar = document.querySelector(".navbar");
+    const nav = navbar?.querySelector("nav");
+
+    if (!navbar || !nav || navbar.querySelector(".menu-toggle")) {
+        return;
+    }
+
+    const toggle = document.createElement("button");
+    toggle.type = "button";
+    toggle.className = "menu-toggle";
+    toggle.setAttribute("aria-label", "Abrir menú");
+    toggle.setAttribute("aria-expanded", "false");
+    toggle.innerHTML = "<span></span><span></span><span></span>";
+
+    const cartButton = navbar.querySelector(".cart-button");
+    if (cartButton) {
+        navbar.insertBefore(toggle, cartButton);
+    } else {
+        navbar.appendChild(toggle);
+    }
+
+    const closeMenu = () => {
+        nav.classList.remove("mobile-open");
+        toggle.setAttribute("aria-expanded", "false");
+        toggle.setAttribute("aria-label", "Abrir menú");
+    };
+
+    toggle.addEventListener("click", () => {
+        const isOpen = nav.classList.toggle("mobile-open");
+        toggle.setAttribute("aria-expanded", String(isOpen));
+        toggle.setAttribute("aria-label", isOpen ? "Cerrar menú" : "Abrir menú");
+    });
+
+    nav.querySelectorAll("a").forEach((link) => {
+        link.addEventListener("click", closeMenu);
+    });
+
+    document.addEventListener("click", (event) => {
+        if (!navbar.contains(event.target)) {
+            closeMenu();
+        }
+    });
+}
+
 function initCart() {
     const clearCartButton = document.getElementById("clear-cart-button");
     const checkoutButton = document.getElementById("checkout-button");
@@ -410,6 +455,7 @@ function initCart() {
 
 async function initStore() {
     productos = await loadProducts();
+    initMobileNav();
     initCart();
     initFilters();
     initCategoryCards();
