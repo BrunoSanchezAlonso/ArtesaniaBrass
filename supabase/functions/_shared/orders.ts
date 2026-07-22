@@ -48,19 +48,41 @@ function formatAddress(address: Stripe.Address | null | undefined) {
   };
 }
 
+function escapeHtml(value: unknown) {
+  return String(value ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#39;");
+}
+
 function formatAddressText(address: Record<string, unknown> | null) {
   if (!address) return "No indicada";
 
   const parts = [
     address.line1,
     address.line2,
-    address.postal_code,
-    address.city,
+    [address.postal_code, address.city].filter(Boolean).join(" "),
     address.state,
     address.country,
   ].filter(Boolean);
 
   return parts.join(", ");
+}
+
+function formatAddressHtml(address: Record<string, unknown> | null) {
+  if (!address) return "No indicada";
+
+  const lines = [
+    address.line1,
+    address.line2,
+    [address.postal_code, address.city].filter(Boolean).join(" "),
+    address.state,
+    address.country,
+  ].filter(Boolean);
+
+  return lines.map((line) => escapeHtml(line)).join("<br>");
 }
 
 function formatMoney(amount: number, currency: string) {
@@ -81,11 +103,120 @@ function formatOrderItemLabel(item: OrderItem) {
 function buildItemsHtml(items: OrderItem[]) {
   return items.map((item) => `
     <tr>
-      <td style="padding:8px 0;border-bottom:1px solid #eee;">${formatOrderItemLabel(item)}</td>
-      <td style="padding:8px 0;border-bottom:1px solid #eee;text-align:center;">${item.cantidad}</td>
-      <td style="padding:8px 0;border-bottom:1px solid #eee;text-align:right;">${formatMoney(item.precio_unitario * item.cantidad, "eur")}</td>
+      <td style="padding:12px 0;border-bottom:1px solid #eadfd3;color:#2c2c2c;">
+        ${escapeHtml(formatOrderItemLabel(item))}
+      </td>
+      <td style="padding:12px 8px;border-bottom:1px solid #eadfd3;text-align:center;color:#555;">
+        ${item.cantidad}
+      </td>
+      <td style="padding:12px 0;border-bottom:1px solid #eadfd3;text-align:right;color:#2c2c2c;font-weight:bold;">
+        ${escapeHtml(formatMoney(item.precio_unitario * item.cantidad, "eur"))}
+      </td>
     </tr>
   `).join("");
+}
+
+function buildEmailShell({
+  title,
+  eyebrow,
+  bodyHtml,
+}: {
+  title: string;
+  eyebrow: string;
+  bodyHtml: string;
+}) {
+  return `
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>${escapeHtml(title)}</title>
+</head>
+<body style="margin:0;padding:0;background:#f3ebe4;">
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#f3ebe4;padding:28px 12px;">
+    <tr>
+      <td align="center">
+        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:600px;background:#ffffff;border:1px solid #e8dfd2;border-radius:16px;overflow:hidden;">
+          <tr>
+            <td style="background:#8a5a44;padding:22px 28px;">
+              <p style="margin:0;font-family:Georgia,'Times New Roman',serif;font-size:22px;color:#fff;letter-spacing:0.02em;">
+                ArtesaniaBrass
+              </p>
+              <p style="margin:6px 0 0;font-family:Arial,Helvetica,sans-serif;font-size:13px;color:#f3ebe4;">
+                Joyería artesanal en latón y cobre
+              </p>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:28px 28px 8px;font-family:Arial,Helvetica,sans-serif;color:#2c2c2c;">
+              <p style="margin:0 0 8px;font-size:12px;letter-spacing:0.08em;text-transform:uppercase;color:#8a5a44;font-weight:bold;">
+                ${escapeHtml(eyebrow)}
+              </p>
+              <h1 style="margin:0 0 18px;font-family:Georgia,'Times New Roman',serif;font-size:26px;line-height:1.25;color:#8a5a44;font-weight:normal;">
+                ${escapeHtml(title)}
+              </h1>
+              ${bodyHtml}
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:8px 28px 28px;font-family:Arial,Helvetica,sans-serif;">
+              <p style="margin:24px 0 0;padding-top:18px;border-top:1px solid #eadfd3;font-size:13px;line-height:1.6;color:#777;">
+                ArtesaniaBrass · Rosa Alonso<br>
+                <a href="mailto:info@artesaniabrass.es" style="color:#8a5a44;text-decoration:none;">info@artesaniabrass.es</a>
+                ·
+                <a href="https://www.instagram.com/artesania.brass/" style="color:#8a5a44;text-decoration:none;">@artesania.brass</a>
+              </p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
+  `;
+}
+
+function buildOrderDetailsHtml(order: SavedOrder) {
+  const items = order.pedido_items ?? [];
+  const itemsHtml = buildItemsHtml(items);
+  const total = formatMoney(order.total_amount, order.currency);
+  const addressHtml = formatAddressHtml(order.shipping_address);
+  const methodLabel = getMethodLabel(order.metodo_pago);
+
+  return `
+    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin:0 0 18px;background:#faf7f2;border:1px solid #eadfd3;border-radius:12px;">
+      <tr>
+        <td style="padding:16px 18px;font-family:Arial,Helvetica,sans-serif;font-size:14px;line-height:1.6;color:#555;">
+          <p style="margin:0 0 6px;"><strong style="color:#2c2c2c;">Pedido:</strong> #${order.id}</p>
+          <p style="margin:0 0 6px;"><strong style="color:#2c2c2c;">Pago:</strong> ${escapeHtml(methodLabel)}</p>
+          <p style="margin:0;"><strong style="color:#2c2c2c;">Total:</strong> ${escapeHtml(total)}</p>
+        </td>
+      </tr>
+    </table>
+
+    <h2 style="margin:0 0 10px;font-family:Arial,Helvetica,sans-serif;font-size:15px;color:#8a5a44;">
+      Resumen
+    </h2>
+    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin:0 0 20px;font-family:Arial,Helvetica,sans-serif;font-size:14px;">
+      <thead>
+        <tr>
+          <th align="left" style="padding:0 0 10px;border-bottom:2px solid #8a5a44;color:#8a5a44;font-size:12px;text-transform:uppercase;letter-spacing:0.04em;">Producto</th>
+          <th align="center" style="padding:0 8px 10px;border-bottom:2px solid #8a5a44;color:#8a5a44;font-size:12px;text-transform:uppercase;letter-spacing:0.04em;">Cant.</th>
+          <th align="right" style="padding:0 0 10px;border-bottom:2px solid #8a5a44;color:#8a5a44;font-size:12px;text-transform:uppercase;letter-spacing:0.04em;">Importe</th>
+        </tr>
+      </thead>
+      <tbody>${itemsHtml}</tbody>
+    </table>
+
+    <h2 style="margin:0 0 8px;font-family:Arial,Helvetica,sans-serif;font-size:15px;color:#8a5a44;">
+      Dirección de envío
+    </h2>
+    <p style="margin:0 0 18px;font-family:Arial,Helvetica,sans-serif;font-size:14px;line-height:1.6;color:#555;">
+      ${addressHtml}
+    </p>
+  `;
 }
 
 async function sendEmail({
@@ -99,6 +230,9 @@ async function sendEmail({
 }) {
   const apiKey = Deno.env.get("RESEND_API_KEY");
   const from = Deno.env.get("RESEND_FROM");
+  const replyTo = Deno.env.get("RESEND_REPLY_TO") ||
+    Deno.env.get("STORE_OWNER_EMAIL") ||
+    "info@artesaniabrass.es";
 
   if (!apiKey) {
     console.log(`RESEND_API_KEY no configurada. Email omitido para ${to}`);
@@ -118,7 +252,13 @@ async function sendEmail({
       Authorization: `Bearer ${apiKey}`,
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({ from, to, subject, html }),
+    body: JSON.stringify({
+      from,
+      to,
+      reply_to: replyTo,
+      subject,
+      html,
+    }),
   });
 
   if (!response.ok) {
@@ -130,69 +270,96 @@ async function sendEmail({
   return true;
 }
 
-async function sendOrderEmails(order: SavedOrder) {
+function getMethodLabel(metodoPago?: string) {
+  if (metodoPago === "bizum") return "Bizum";
+  if (metodoPago === "transferencia") return "transferencia";
+  return "tarjeta";
+}
+
+function getOwnerEmail() {
+  return Deno.env.get("STORE_OWNER_EMAIL") ?? "intentaloaki@gmail.com";
+}
+
+/** Aviso a la tienda: pedido nuevo (pendiente o ya pagado). */
+export async function notifyOwnerNewOrder(order: SavedOrder) {
+  const isPending = !order.pago_confirmado;
+  const customerName = escapeHtml(order.customer_name ?? "Sin nombre");
+  const customerEmail = escapeHtml(order.customer_email ?? "Sin email");
+
+  const bodyHtml = `
+    <p style="margin:0 0 16px;font-size:15px;line-height:1.6;color:#555;">
+      ${
+        isPending
+          ? "Has recibido un pedido nuevo pendiente de pago. Cuando llegue el Bizum o la transferencia, confírmalo en el panel de administración."
+          : "Has recibido un pedido nuevo con el pago ya confirmado."
+      }
+    </p>
+    <p style="margin:0 0 18px;font-size:14px;line-height:1.6;color:#555;">
+      <strong style="color:#2c2c2c;">Cliente:</strong> ${customerName}<br>
+      <strong style="color:#2c2c2c;">Email:</strong> ${customerEmail}
+    </p>
+    ${
+      isPending
+        ? `<p style="margin:0 0 18px;padding:12px 14px;background:#fff7e8;border:1px solid #e8d3a8;border-radius:10px;font-size:14px;line-height:1.5;color:#6b4f1d;">
+            Estado: <strong>pendiente de pago</strong>. Concepto esperado: #${customerName} Pedido #${order.id}
+          </p>`
+        : `<p style="margin:0 0 18px;padding:12px 14px;background:#eef6ea;border:1px solid #c9dfc0;border-radius:10px;font-size:14px;line-height:1.5;color:#2f5d2a;">
+            Estado: <strong>pagado</strong>
+          </p>`
+    }
+    ${buildOrderDetailsHtml(order)}
+  `;
+
+  const ownerHtml = buildEmailShell({
+    title: `Pedido #${order.id}`,
+    eyebrow: isPending ? "Nuevo pedido · Pendiente" : "Nuevo pedido · Pagado",
+    bodyHtml,
+  });
+
+  return await sendEmail({
+    to: getOwnerEmail(),
+    subject: isPending
+      ? `Nuevo pedido #${order.id} (pendiente de pago) · ArtesaniaBrass`
+      : `Nuevo pedido #${order.id} · ArtesaniaBrass`,
+    html: ownerHtml,
+  });
+}
+
+/** Confirmación al cliente cuando el pago está confirmado. */
+export async function notifyCustomerPaymentConfirmed(order: SavedOrder) {
   if (!order.customer_email || order.email_enviado) {
     return false;
   }
 
-  const items = order.pedido_items ?? [];
-  const itemsHtml = buildItemsHtml(items);
-  const total = formatMoney(order.total_amount, order.currency);
-  const address = formatAddressText(order.shipping_address);
+  const firstName = order.customer_name
+    ? escapeHtml(String(order.customer_name).trim().split(/\s+/)[0])
+    : "";
 
-  const customerHtml = `
-    <div style="font-family:Arial,sans-serif;color:#2c2c2c;max-width:560px;">
-      <h1 style="color:#8a5a44;">¡Gracias por tu compra!</h1>
-      <p>Hola${order.customer_name ? ` ${order.customer_name}` : ""},</p>
-      <p>Hemos recibido tu pedido en ArtesaniaBrass. Estos son los detalles:</p>
-      <table style="width:100%;border-collapse:collapse;margin:20px 0;">
-        <thead>
-          <tr>
-            <th style="text-align:left;padding-bottom:8px;">Producto</th>
-            <th style="text-align:center;padding-bottom:8px;">Cant.</th>
-            <th style="text-align:right;padding-bottom:8px;">Importe</th>
-          </tr>
-        </thead>
-        <tbody>${itemsHtml}</tbody>
-      </table>
-      <p><strong>Total:</strong> ${total}</p>
-      <p><strong>Dirección de envío:</strong><br>${address}</p>
-      <p>Prepararemos tu pedido con mucho cariño. Si tienes alguna duda, responde a este correo.</p>
-      <p style="color:#666;">ArtesaniaBrass · Joyería artesanal</p>
-    </div>
+  const bodyHtml = `
+    <p style="margin:0 0 16px;font-size:15px;line-height:1.6;color:#555;">
+      Hola${firstName ? ` ${firstName}` : ""},
+    </p>
+    <p style="margin:0 0 16px;font-size:15px;line-height:1.6;color:#555;">
+      Hemos confirmado el pago de tu pedido <strong>#${order.id}</strong>.
+      Muy pronto prepararemos tus piezas con mimo en el taller.
+    </p>
+    ${buildOrderDetailsHtml(order)}
+    <p style="margin:0;font-size:15px;line-height:1.6;color:#555;">
+      Si tienes cualquier duda, escríbenos a
+      <a href="mailto:info@artesaniabrass.es" style="color:#8a5a44;">info@artesaniabrass.es</a>.
+    </p>
   `;
 
-  const ownerEmail = Deno.env.get("STORE_OWNER_EMAIL") ?? "intentaloaki@gmail.com";
-  const ownerHtml = `
-    <div style="font-family:Arial,sans-serif;color:#2c2c2c;max-width:560px;">
-      <h1 style="color:#8a5a44;">Nuevo pedido #${order.id}</h1>
-      <p><strong>Cliente:</strong> ${order.customer_name ?? "Sin nombre"} (${order.customer_email})</p>
-      <p><strong>Total:</strong> ${total}</p>
-      <p><strong>Dirección de envío:</strong><br>${address}</p>
-      <table style="width:100%;border-collapse:collapse;margin:20px 0;">
-        <thead>
-          <tr>
-            <th style="text-align:left;padding-bottom:8px;">Producto</th>
-            <th style="text-align:center;padding-bottom:8px;">Cant.</th>
-            <th style="text-align:right;padding-bottom:8px;">Importe</th>
-          </tr>
-        </thead>
-        <tbody>${itemsHtml}</tbody>
-      </table>
-      <p>Pedido registrado desde Stripe session ${order.stripe_session_id}</p>
-    </div>
-  `;
+  const customerHtml = buildEmailShell({
+    title: "¡Gracias por tu compra!",
+    eyebrow: "Confirmación de pedido",
+    bodyHtml,
+  });
 
   const customerSent = await sendEmail({
     to: order.customer_email,
-    subject: "Confirmación de tu pedido · ArtesaniaBrass",
+    subject: `Confirmación de tu pedido #${order.id} · ArtesaniaBrass`,
     html: customerHtml,
-  });
-
-  const ownerSent = await sendEmail({
-    to: ownerEmail,
-    subject: `Nuevo pedido #${order.id} · ArtesaniaBrass`,
-    html: ownerHtml,
   });
 
   if (!customerSent) {
@@ -201,7 +368,100 @@ async function sendOrderEmails(order: SavedOrder) {
     );
   }
 
-  return customerSent || ownerSent;
+  return customerSent;
+}
+
+/** Stripe: aviso a la tienda + confirmación al cliente (pago ya hecho). */
+async function sendPaidOrderEmails(order: SavedOrder) {
+  if (order.email_enviado) {
+    return false;
+  }
+
+  const ownerSent = await notifyOwnerNewOrder(order);
+  const customerSent = await notifyCustomerPaymentConfirmed(order);
+
+  return ownerSent || customerSent;
+}
+
+const ORDER_SELECT = `
+  id,
+  stripe_session_id,
+  customer_email,
+  customer_name,
+  shipping_address,
+  total_amount,
+  currency,
+  status,
+  metodo_pago,
+  pago_confirmado,
+  email_enviado,
+  created_at,
+  pedido_items (
+    producto_id,
+    nombre,
+    precio_unitario,
+    cantidad
+  )
+`;
+
+export async function confirmManualPayment(orderId: number): Promise<SavedOrder> {
+  if (!Number.isInteger(orderId) || orderId <= 0) {
+    throw new Error("Identificador de pedido no válido.");
+  }
+
+  const supabase = getSupabaseAdmin();
+  const { data: order, error } = await supabase
+    .from("pedidos")
+    .select(ORDER_SELECT)
+    .eq("id", orderId)
+    .single();
+
+  if (error || !order) {
+    throw new Error(error?.message ?? "Pedido no encontrado.");
+  }
+
+  const savedOrder = order as SavedOrder;
+
+  if (
+    savedOrder.metodo_pago !== "bizum" &&
+    savedOrder.metodo_pago !== "transferencia"
+  ) {
+    throw new Error(
+      "Solo se pueden confirmar manualmente pedidos por Bizum o transferencia.",
+    );
+  }
+
+  if (!savedOrder.pago_confirmado) {
+    const { error: updateError } = await supabase
+      .from("pedidos")
+      .update({
+        pago_confirmado: true,
+        status: "pagado",
+      })
+      .eq("id", orderId);
+
+    if (updateError) {
+      throw new Error(updateError.message);
+    }
+
+    savedOrder.pago_confirmado = true;
+    savedOrder.status = "pagado";
+  }
+
+  if (!savedOrder.email_enviado) {
+    const emailSent = await notifyCustomerPaymentConfirmed(savedOrder);
+
+    if (emailSent) {
+      await supabase
+        .from("pedidos")
+        .update({ email_enviado: true })
+        .eq("id", orderId);
+
+      savedOrder.email_enviado = true;
+    }
+  }
+
+  return savedOrder;
 }
 
 function extractProductIdFromLineItem(item: Stripe.LineItem) {
@@ -312,26 +572,7 @@ export async function fulfillCheckoutSession(
 
   const { data: order, error: orderError } = await supabase
     .from("pedidos")
-    .select(`
-      id,
-      stripe_session_id,
-      customer_email,
-      customer_name,
-      shipping_address,
-      total_amount,
-      currency,
-      status,
-      metodo_pago,
-      pago_confirmado,
-      email_enviado,
-      created_at,
-      pedido_items (
-        producto_id,
-        nombre,
-        precio_unitario,
-        cantidad
-      )
-    `)
+    .select(ORDER_SELECT)
     .eq("id", pedidoId)
     .single();
 
@@ -342,7 +583,7 @@ export async function fulfillCheckoutSession(
   const savedOrder = order as SavedOrder & { email_enviado: boolean };
 
   if (!savedOrder.email_enviado) {
-    const emailSent = await sendOrderEmails(savedOrder);
+    const emailSent = await sendPaidOrderEmails(savedOrder);
 
     if (emailSent) {
       await supabase

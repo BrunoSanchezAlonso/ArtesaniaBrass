@@ -71,6 +71,18 @@ npx supabase secrets set RESEND_FROM="ArtesaniaBrass <pedidos@tudominio.com>"
 
 Pedidos Bizum/transferencia: se registran con pago pendiente y se confirman a mano desde el admin.
 
+### Seguridad admin (obligatorio)
+
+Tras `db push`, registra el email con el que entras al admin:
+
+```sql
+insert into public.store_admins (email) values ('tu-email@ejemplo.com');
+```
+
+En producción, desactiva registros públicos: Supabase Dashboard → Authentication → Providers → Email → **Disable sign ups**.
+
+Los precios de checkout se leen siempre desde la tabla `productos` (no del carrito del navegador).
+
 ## Publicar en Netlify
 
 1. Sube el repositorio a GitHub.

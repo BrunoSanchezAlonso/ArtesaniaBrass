@@ -1,17 +1,15 @@
 import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
+import {
+  getSupabaseAdmin,
+  parseCartQuantities,
+  resolveCartItems,
+} from "../_shared/cart.ts";
+import { notifyOwnerNewOrder, type SavedOrder } from "../_shared/orders.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
     "authorization, x-client-info, apikey, content-type",
-};
-
-type CartItem = {
-  name: string;
-  price: number;
-  quantity: number;
-  productId?: number;
 };
 
 function jsonResponse(body: Record<string, unknown>, status = 200) {
@@ -21,55 +19,6 @@ function jsonResponse(body: Record<string, unknown>, status = 200) {
       ...corsHeaders,
       "Content-Type": "application/json",
     },
-  });
-}
-
-function getSupabaseAdmin() {
-  const url = Deno.env.get("SUPABASE_URL");
-  const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
-
-  if (!url || !serviceRoleKey) {
-    throw new Error("Supabase no está configurado en el servidor.");
-  }
-
-  return createClient(url, serviceRoleKey);
-}
-
-function validateItems(items: unknown): CartItem[] {
-  if (!Array.isArray(items) || items.length === 0) {
-    throw new Error("El carrito está vacío.");
-  }
-
-  if (items.length > 50) {
-    throw new Error("Demasiados artículos en el carrito.");
-  }
-
-  return items.map((item) => {
-    const name = typeof item?.name === "string" ? item.name.trim() : "";
-    const price = Number(item?.price);
-    const quantity = Number(item?.quantity ?? 1);
-    const productId = Number(item?.productId);
-
-    if (!name || name.length > 120) {
-      throw new Error("Nombre de producto no válido.");
-    }
-
-    if (!Number.isFinite(price) || price <= 0 || price > 10000) {
-      throw new Error("Precio no válido.");
-    }
-
-    if (!Number.isInteger(quantity) || quantity < 1 || quantity > 20) {
-      throw new Error("Cantidad no válida.");
-    }
-
-    return {
-      name,
-      price,
-      quantity,
-      productId: Number.isInteger(productId) && productId > 0
-        ? productId
-        : undefined,
-    };
   });
 }
 
@@ -159,7 +108,10 @@ serve(async (req) => {
     }
 
     const shippingAddress = validateShippingAddress(body.shippingAddress);
-    const items = validateItems(body.items);
+    const requestedItems = parseCartQuantities(body.items);
+    const supabase = getSupabaseAdmin();
+    const items = await resolveCartItems(supabase, requestedItems);
+
     const itemsTotal = items.reduce(
       (sum, item) => sum + item.price * item.quantity,
       0,
@@ -167,7 +119,6 @@ serve(async (req) => {
     const shippingCost = shippingAddress.country === "ES" ? 0 : 5;
     const totalAmount = itemsTotal + shippingCost;
 
-    const supabase = getSupabaseAdmin();
     const { data: insertedOrder, error: insertError } = await supabase
       .from("pedidos")
       .insert({
@@ -191,7 +142,7 @@ serve(async (req) => {
 
     const orderItems = items.map((item) => ({
       pedido_id: insertedOrder.id,
-      producto_id: item.productId ?? null,
+      producto_id: item.productId,
       nombre: item.name,
       precio_unitario: item.price,
       cantidad: item.quantity,
@@ -214,6 +165,38 @@ serve(async (req) => {
     if (itemsError) {
       throw new Error(itemsError.message);
     }
+
+    const pendingOrder: SavedOrder = {
+      id: insertedOrder.id,
+      stripe_session_id: null,
+      customer_email: customerEmail,
+      customer_name: customerName,
+      shipping_address: shippingAddress,
+      total_amount: totalAmount,
+      currency: "eur",
+      status: "pendiente_pago",
+      metodo_pago: metodoPago,
+      pago_confirmado: false,
+      email_enviado: false,
+      created_at: new Date().toISOString(),
+      pedido_items: items.map((item) => ({
+        producto_id: item.productId,
+        nombre: item.name,
+        precio_unitario: item.price,
+        cantidad: item.quantity,
+      })).concat(
+        shippingCost > 0
+          ? [{
+            producto_id: null,
+            nombre: "Gastos de envío (fuera de España)",
+            precio_unitario: shippingCost,
+            cantidad: 1,
+          }]
+          : [],
+      ),
+    };
+
+    await notifyOwnerNewOrder(pendingOrder);
 
     return jsonResponse({
       order: {

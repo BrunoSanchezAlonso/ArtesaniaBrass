@@ -58,12 +58,39 @@ async function checkSession() {
     const { data } = await supabaseClient.auth.getSession();
 
     if (data.session) {
+        const allowed = await ensureStoreAdminAccess(data.session.user.email);
+        if (!allowed) return;
         showAdminPanel(data.session.user.email);
         await loadAdminProducts();
         await loadAdminOrders();
     } else {
         showLoginPanel();
     }
+}
+
+async function ensureStoreAdminAccess(email) {
+    const { data: isAdmin, error } = await supabaseClient.rpc("is_store_admin");
+
+    if (error) {
+        console.error("Error comprobando admin:", error);
+        await supabaseClient.auth.signOut();
+        showLoginPanel();
+        showLoginError(
+            "No se pudo verificar el acceso de administrador. ¿Has aplicado la migración store_admins?"
+        );
+        return false;
+    }
+
+    if (!isAdmin) {
+        await supabaseClient.auth.signOut();
+        showLoginPanel();
+        showLoginError(
+            `La cuenta ${email} no está autorizada. Añade ese email a la tabla store_admins en Supabase.`
+        );
+        return false;
+    }
+
+    return true;
 }
 
 async function handleLogin(event) {
@@ -95,6 +122,9 @@ async function handleLogin(event) {
         showLoginError("Correo o contraseña incorrectos.");
         return;
     }
+
+    const allowed = await ensureStoreAdminAccess(data.user.email);
+    if (!allowed) return;
 
     showAdminPanel(data.user.email);
     await loadAdminProducts();
@@ -348,26 +378,52 @@ async function confirmOrderPayment(orderId) {
 
     const methodLabel = getMetodoPagoLabel(pedido.metodo_pago).toLowerCase();
     const confirmed = confirm(
-        `¿Confirmas que has recibido el pago del pedido #${orderId} (${methodLabel})?`
+        `¿Confirmas que has recibido el pago del pedido #${orderId} (${methodLabel})?\n\nSe enviará un email de confirmación al cliente.`
     );
     if (!confirmed) return;
 
-    const { error } = await supabaseClient
-        .from("pedidos")
-        .update({
-            pago_confirmado: true,
-            status: "pagado"
-        })
-        .eq("id", orderId);
+    const { data: sessionData } = await supabaseClient.auth.getSession();
+    const accessToken = sessionData.session?.access_token;
 
-    if (error) {
-        showOrdersMessage("No se pudo confirmar el pago.", "error");
+    if (!accessToken || !isSupabaseConfigured()) {
+        showOrdersMessage("Sesión no válida. Vuelve a iniciar sesión.", "error");
         return;
     }
 
-    closeOrderModal();
-    showOrdersMessage(`Pago del pedido #${orderId} confirmado.`);
-    await loadAdminOrders();
+    try {
+        const response = await fetch(
+            `${SUPABASE_URL}/functions/v1/confirm-offline-payment`,
+            {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${accessToken}`
+                },
+                body: JSON.stringify({ orderId })
+            }
+        );
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            throw new Error(data.error || "No se pudo confirmar el pago.");
+        }
+
+        closeOrderModal();
+
+        const emailNote = data.order?.email_enviado
+            ? " Email de confirmación enviado al cliente."
+            : " El pago quedó confirmado, pero el email al cliente no se pudo enviar (revisa Resend).";
+
+        showOrdersMessage(`Pago del pedido #${orderId} confirmado.${emailNote}`);
+        await loadAdminOrders();
+    } catch (error) {
+        console.error("Error al confirmar pago:", error);
+        showOrdersMessage(
+            error.message || "No se pudo confirmar el pago.",
+            "error"
+        );
+    }
 }
 
 function closeOrderModal() {
