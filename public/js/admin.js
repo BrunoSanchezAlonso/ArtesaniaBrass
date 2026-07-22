@@ -167,14 +167,23 @@ function formatDate(dateString) {
 function formatAddress(address) {
     if (!address) return "No indicada";
 
-    return [
+    if (typeof address === "string") {
+        try {
+            address = JSON.parse(address);
+        } catch {
+            return address;
+        }
+    }
+
+    const parts = [
         address.line1,
         address.line2,
-        address.postal_code,
-        address.city,
+        [address.postal_code, address.city].filter(Boolean).join(" "),
         address.state,
         address.country
-    ].filter(Boolean).join(", ");
+    ].filter(Boolean);
+
+    return parts.length > 0 ? parts.join(", ") : "No indicada";
 }
 
 async function loadAdminOrders() {

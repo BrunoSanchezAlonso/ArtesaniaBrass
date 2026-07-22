@@ -239,14 +239,14 @@ function showSuccess(order) {
         <h1>Pedido #${order.id} creado</h1>
         <p>
             Tu pedido por ${methodLabel} ya está registrado.
-            El total es <strong>${total}</strong>. Ahora solo falta realizar el pago.
+            El total es <strong>${total}</strong>. Ahora solo falta realizar el pago.<br><br>
         </p>
         ${getPaymentDetailsHtml(order.id, total)}
         <p>
             Si tienes dudas, escríbenos a
             <a href="mailto:info@artesaniabrass.es">info@artesaniabrass.es</a>
             o por Instagram
-            <a href="https://www.instagram.com/artesania.brass/" target="_blank" rel="noopener noreferrer">@artesania.brass</a>.
+            <a href="https://www.instagram.com/artesania.brass/" target="_blank" rel="noopener noreferrer">@artesania.brass</a>.<br><br>
         </p>
         <a href="index.html" class="payment-continue-button">Volver a la tienda</a>
     `;
