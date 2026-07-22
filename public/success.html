@@ -76,9 +76,38 @@
       summary.classList.remove("hidden");
     }
 
+    function sleep(ms) {
+      return new Promise((resolve) => setTimeout(resolve, ms));
+    }
+
+    async function syncRecentStripeOrders() {
+      try {
+        await fetch(`${SUPABASE_URL}/functions/v1/reconcile-stripe-orders`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+            apikey: SUPABASE_ANON_KEY
+          },
+          body: "{}"
+        });
+      } catch (error) {
+        console.warn("reconcile-stripe-orders:", error);
+      }
+    }
+
     async function confirmOrder() {
       const params = new URLSearchParams(window.location.search);
       const sessionId = params.get("session_id");
+
+      if (!isSupabaseConfigured()) {
+        document.getElementById("success-message").textContent =
+          "Hemos recibido tu pedido correctamente. Te enviaremos un correo de confirmación y prepararemos tu joya artesanal con mucho cariño.";
+        return;
+      }
+
+      // Siempre intenta sincronizar pagos recientes (útil si Apple Pay no trae session_id).
+      await syncRecentStripeOrders();
 
       if (!sessionId) {
         console.warn("No se encontró session_id en la URL:", window.location.href);
@@ -87,38 +116,46 @@
         return;
       }
 
-      if (!isSupabaseConfigured()) {
-        document.getElementById("success-message").textContent =
-          "Hemos recibido tu pedido correctamente. Te enviaremos un correo de confirmación y prepararemos tu joya artesanal con mucho cariño.";
-        return;
-      }
+      const maxAttempts = 5;
 
-      try {
-        const response = await fetch(`${SUPABASE_URL}/functions/v1/fulfill-order`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${SUPABASE_ANON_KEY}`
-          },
-          body: JSON.stringify({ sessionId })
-        });
+      for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
+        try {
+          const response = await fetch(`${SUPABASE_URL}/functions/v1/fulfill-order`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${SUPABASE_ANON_KEY}`
+            },
+            body: JSON.stringify({ sessionId })
+          });
 
-        const data = await response.json();
+          const data = await response.json();
 
-        if (response.ok && data.order) {
-          renderOrderSummary(data.order);
+          if (response.ok && data.order) {
+            renderOrderSummary(data.order);
+            return;
+          }
+
+          // 409: pago aún no marcado como pagado (puede pasar con wallets).
+          if (response.status === 409 && attempt < maxAttempts) {
+            await sleep(1000 * attempt);
+            continue;
+          }
+
+          console.error("fulfill-order error:", data.error || response.status);
+          document.getElementById("success-message").textContent =
+            "Pago recibido. Estamos registrando tu pedido; revisa tu correo en unos minutos.";
           return;
-        }
+        } catch (error) {
+          console.error("No se pudo cargar el resumen del pedido:", error);
+          if (attempt < maxAttempts) {
+            await sleep(1000 * attempt);
+            continue;
+          }
 
-        console.error("fulfill-order error:", data.error || response.status);
-        document.getElementById("success-message").textContent =
-          data.error
-            ? "Pago recibido. Estamos registrando tu pedido; revisa tu correo en unos minutos."
-            : "Hemos recibido tu pago correctamente. En breve recibirás la confirmación por correo.";
-      } catch (error) {
-        console.error("No se pudo cargar el resumen del pedido:", error);
-        document.getElementById("success-message").textContent =
-          "Hemos recibido tu pago correctamente. En breve recibirás la confirmación por correo.";
+          document.getElementById("success-message").textContent =
+            "Hemos recibido tu pago correctamente. En breve recibirás la confirmación por correo.";
+        }
       }
     }
 

@@ -48,6 +48,26 @@ function formatAddress(address: Stripe.Address | null | undefined) {
   };
 }
 
+/** Wallets (Apple Pay / Google Pay) y APIs nuevas pueden traer el envío en sitios distintos. */
+function getSessionShipping(session: Stripe.Checkout.Session) {
+  const collected = (
+    session as Stripe.Checkout.Session & {
+      collected_information?: {
+        shipping_details?: Stripe.Checkout.Session.ShippingDetails | null;
+      };
+    }
+  ).collected_information?.shipping_details;
+
+  const shipping = collected ?? session.shipping_details ?? null;
+
+  return {
+    name: shipping?.name ?? session.customer_details?.name ?? null,
+    address: formatAddress(
+      shipping?.address ?? session.customer_details?.address,
+    ),
+  };
+}
+
 function escapeHtml(value: unknown) {
   return String(value ?? "")
     .replaceAll("&", "&amp;")
@@ -494,11 +514,13 @@ export async function fulfillCheckoutSession(
   stripe: Stripe,
   sessionId: string,
 ): Promise<SavedOrder | null> {
+  // Expand mínimo recomendado por Stripe; los ítems se listan aparte por si hay muchos.
   const session = await stripe.checkout.sessions.retrieve(sessionId, {
-    expand: ["line_items.data.price.product"],
+    expand: ["line_items", "payment_intent"],
   });
 
-  if (session.payment_status !== "paid") {
+  // paid | no_payment_required → cumplir; unpaid → aún no (métodos asíncronos / wallets).
+  if (session.payment_status === "unpaid") {
     return null;
   }
 
@@ -509,7 +531,14 @@ export async function fulfillCheckoutSession(
     .eq("stripe_session_id", session.id)
     .maybeSingle();
 
-  const lineItems = session.line_items?.data ?? [];
+  const listedItems = await stripe.checkout.sessions.listLineItems(session.id, {
+    limit: 100,
+    expand: ["data.price.product"],
+  });
+  const lineItems = listedItems.data.length > 0
+    ? listedItems.data
+    : session.line_items?.data ?? [];
+
   const items: OrderItem[] = lineItems.map((item) => ({
     nombre: extractProductNameFromLineItem(item),
     precio_unitario: (item.price?.unit_amount ?? 0) / 100,
@@ -517,20 +546,29 @@ export async function fulfillCheckoutSession(
     producto_id: extractProductIdFromLineItem(item),
   }));
 
+  const shippingCostAmount = (session.shipping_cost?.amount_total ?? 0) / 100;
+  if (shippingCostAmount > 0) {
+    items.push({
+      nombre: "Envío",
+      precio_unitario: shippingCostAmount,
+      cantidad: 1,
+      producto_id: null,
+    });
+  }
+
   const totalAmount = (session.amount_total ?? 0) / 100;
-  const shippingAddress = formatAddress(
-    session.shipping_details?.address ?? session.customer_details?.address,
-  );
+  const shipping = getSessionShipping(session);
+
+  const paymentIntentId = typeof session.payment_intent === "string"
+    ? session.payment_intent
+    : session.payment_intent?.id ?? null;
 
   const orderPayload = {
     stripe_session_id: session.id,
-    stripe_payment_intent_id: typeof session.payment_intent === "string"
-      ? session.payment_intent
-      : session.payment_intent?.id ?? null,
+    stripe_payment_intent_id: paymentIntentId,
     customer_email: session.customer_details?.email ?? session.customer_email,
-    customer_name: session.customer_details?.name ??
-      session.shipping_details?.name ?? null,
-    shipping_address: shippingAddress,
+    customer_name: shipping.name,
+    shipping_address: shipping.address,
     total_amount: totalAmount,
     currency: session.currency ?? "eur",
     status: "pagado",
@@ -548,24 +586,39 @@ export async function fulfillCheckoutSession(
       .single();
 
     if (insertError) {
-      throw new Error(insertError.message);
-    }
+      // Carrera webhook + success.html: otra petición ya insertó el pedido.
+      if (insertError.code === "23505") {
+        const { data: racedOrder, error: racedError } = await supabase
+          .from("pedidos")
+          .select("id")
+          .eq("stripe_session_id", session.id)
+          .single();
 
-    pedidoId = insertedOrder.id;
+        if (racedError || !racedOrder) {
+          throw new Error(insertError.message);
+        }
 
-    if (items.length > 0) {
-      const { error: itemsError } = await supabase
-        .from("pedido_items")
-        .insert(items.map((item) => ({
-          pedido_id: pedidoId,
-          producto_id: item.producto_id,
-          nombre: item.nombre,
-          precio_unitario: item.precio_unitario,
-          cantidad: item.cantidad,
-        })));
+        pedidoId = racedOrder.id;
+      } else {
+        throw new Error(insertError.message);
+      }
+    } else {
+      pedidoId = insertedOrder.id;
 
-      if (itemsError) {
-        throw new Error(itemsError.message);
+      if (items.length > 0) {
+        const { error: itemsError } = await supabase
+          .from("pedido_items")
+          .insert(items.map((item) => ({
+            pedido_id: pedidoId,
+            producto_id: item.producto_id ?? null,
+            nombre: item.nombre,
+            precio_unitario: item.precio_unitario,
+            cantidad: item.cantidad,
+          })));
+
+        if (itemsError) {
+          throw new Error(itemsError.message);
+        }
       }
     }
   }
@@ -583,13 +636,43 @@ export async function fulfillCheckoutSession(
   const savedOrder = order as SavedOrder & { email_enviado: boolean };
 
   if (!savedOrder.email_enviado) {
-    const emailSent = await sendPaidOrderEmails(savedOrder);
+    // Reserva atómica: solo un fulfill concurrente (webhook + success + reconcile) envía mails.
+    const { data: claimed, error: claimError } = await supabase
+      .from("pedidos")
+      .update({ email_enviado: true })
+      .eq("id", savedOrder.id)
+      .eq("email_enviado", false)
+      .select("id")
+      .maybeSingle();
 
-    if (emailSent) {
-      await supabase
-        .from("pedidos")
-        .update({ email_enviado: true })
-        .eq("id", savedOrder.id);
+    if (claimError) {
+      console.error("No se pudo reservar el envío de email:", claimError.message);
+    } else if (claimed) {
+      try {
+        const emailSent = await sendPaidOrderEmails({
+          ...savedOrder,
+          email_enviado: false,
+        });
+
+        if (!emailSent) {
+          await supabase
+            .from("pedidos")
+            .update({ email_enviado: false })
+            .eq("id", savedOrder.id);
+        } else {
+          savedOrder.email_enviado = true;
+        }
+      } catch (emailError) {
+        await supabase
+          .from("pedidos")
+          .update({ email_enviado: false })
+          .eq("id", savedOrder.id);
+
+        console.error(
+          "Pedido guardado, pero falló el envío de emails:",
+          emailError instanceof Error ? emailError.message : emailError,
+        );
+      }
     }
   }
 

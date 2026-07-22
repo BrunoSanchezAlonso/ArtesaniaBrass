@@ -5,6 +5,9 @@ import { fulfillCheckoutSession } from "../_shared/orders.ts";
 const stripeSecretKey = Deno.env.get("STRIPE_SECRET_KEY");
 const webhookSecret = Deno.env.get("STRIPE_WEBHOOK_SECRET");
 
+// Deno/Supabase Edge no tiene crypto síncrono: hace falta SubtleCrypto + constructEventAsync.
+const cryptoProvider = Stripe.createSubtleCryptoProvider();
+
 serve(async (req) => {
   if (req.method !== "POST") {
     return new Response("Método no permitido", { status: 405 });
@@ -16,6 +19,7 @@ serve(async (req) => {
 
   const stripe = new Stripe(stripeSecretKey, {
     apiVersion: "2023-10-16",
+    httpClient: Stripe.createFetchHttpClient(),
   });
 
   const signature = req.headers.get("stripe-signature");
@@ -23,12 +27,19 @@ serve(async (req) => {
     return new Response("Firma ausente", { status: 400 });
   }
 
+  // El body debe ser el texto crudo; no parsear JSON antes de verificar.
   const body = await req.text();
 
   let event: Stripe.Event;
 
   try {
-    event = stripe.webhooks.constructEvent(body, signature, webhookSecret);
+    event = await stripe.webhooks.constructEventAsync(
+      body,
+      signature,
+      webhookSecret,
+      undefined,
+      cryptoProvider,
+    );
   } catch (error) {
     const message = error instanceof Error ? error.message : "Firma inválida";
     console.error("Webhook signature error:", message);
@@ -36,10 +47,28 @@ serve(async (req) => {
   }
 
   try {
-    if (event.type === "checkout.session.completed") {
+    if (
+      event.type === "checkout.session.completed" ||
+      event.type === "checkout.session.async_payment_succeeded"
+    ) {
       const session = event.data.object as Stripe.Checkout.Session;
+      console.log(
+        `Webhook ${event.type} session=${session.id} payment_status=${session.payment_status}`,
+      );
+      await fulfillCheckoutSession(stripe, session.id);
+    }
 
-      if (session.payment_status === "paid") {
+    if (event.type === "payment_intent.succeeded") {
+      const paymentIntent = event.data.object as Stripe.PaymentIntent;
+      const sessions = await stripe.checkout.sessions.list({
+        payment_intent: paymentIntent.id,
+        limit: 1,
+      });
+      const session = sessions.data[0];
+      if (session) {
+        console.log(
+          `Webhook payment_intent.succeeded → session=${session.id}`,
+        );
         await fulfillCheckoutSession(stripe, session.id);
       }
     }

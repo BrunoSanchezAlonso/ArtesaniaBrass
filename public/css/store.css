@@ -946,6 +946,23 @@ footer a:hover {
     text-decoration: underline;
 }
 
+.payment-shipping {
+    border: 0;
+    margin: 16px 0 0;
+    padding: 0;
+}
+
+.payment-shipping legend {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #8a5a44;
+    margin-bottom: 10px;
+}
+
+.payment-shipping .payment-option {
+    margin-bottom: 8px;
+}
+
 .payment-contact {
     text-align: left;
     margin-bottom: 24px;

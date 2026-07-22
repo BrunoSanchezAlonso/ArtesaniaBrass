@@ -216,12 +216,32 @@ function formatAddress(address) {
     return parts.length > 0 ? parts.join(", ") : "No indicada";
 }
 
+async function syncStripeOrdersQuietly() {
+    if (!isSupabaseConfigured()) return;
+
+    try {
+        await fetch(`${SUPABASE_URL}/functions/v1/reconcile-stripe-orders`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+                apikey: SUPABASE_ANON_KEY
+            },
+            body: "{}"
+        });
+    } catch (error) {
+        console.warn("No se pudo sincronizar pedidos de Stripe:", error);
+    }
+}
+
 async function loadAdminOrders() {
     ordersTableBody.innerHTML = `
         <tr>
             <td colspan="7" class="loading-cell">Cargando pedidos...</td>
         </tr>
     `;
+
+    await syncStripeOrdersQuietly();
 
     const { data, error } = await supabaseClient
         .from("pedidos")

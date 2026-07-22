@@ -1,10 +1,12 @@
 const PAYMENT_CART_KEY = "artesanibrass-cart";
+const INTERNATIONAL_SHIPPING_EUR = 5;
 
 let paymentCart = [];
 let continueButton;
 let errorElement;
 let orderItemsElement;
 let totalElement;
+let shippingNoteElement;
 let tarjetaDetails;
 let offlineDetails;
 
@@ -27,8 +29,23 @@ function loadPaymentCart() {
     }
 }
 
-function getPaymentCartTotal() {
+function getPaymentCartSubtotal() {
     return paymentCart.reduce((total, item) => total + Number(item.price), 0);
+}
+
+function getSelectedShippingDestination() {
+    const selected = document.querySelector('input[name="shipping-destination"]:checked');
+    return selected?.value === "INTL" ? "INTL" : "ES";
+}
+
+function getShippingCost() {
+    return getSelectedShippingDestination() === "INTL"
+        ? INTERNATIONAL_SHIPPING_EUR
+        : 0;
+}
+
+function getPaymentCartTotal() {
+    return getPaymentCartSubtotal() + getShippingCost();
 }
 
 function getPaymentCartLineItems() {
@@ -61,8 +78,8 @@ function getCheckoutReturnUrls() {
     const baseUrl = new URL("./", window.location.href).href;
 
     return {
-        successUrl: `${baseUrl}success?session_id={CHECKOUT_SESSION_ID}`,
-        cancelUrl: `${baseUrl}pago`
+        successUrl: `${baseUrl}success.html?session_id={CHECKOUT_SESSION_ID}`,
+        cancelUrl: `${baseUrl}pago.html`
     };
 }
 
@@ -86,15 +103,35 @@ function hideError() {
 
 function renderSummary() {
     const lineItems = getPaymentCartLineItems();
-
-    orderItemsElement.innerHTML = lineItems.map((item) => `
+    const method = getSelectedMethod();
+    const includeShipping = method === "tarjeta";
+    const shippingCost = includeShipping ? getShippingCost() : 0;
+    const itemsHtml = lineItems.map((item) => `
         <li>
             <span>${item.productId ? `#${item.productId} · ` : ""}${item.name}</span>
             <span>${item.quantity} × ${formatPaymentPrice(item.price)}</span>
         </li>
     `).join("");
 
-    totalElement.textContent = formatPaymentPrice(getPaymentCartTotal());
+    const shippingHtml = includeShipping
+        ? `
+        <li>
+            <span>Envío</span>
+            <span>${shippingCost === 0 ? "Gratis" : formatPaymentPrice(shippingCost)}</span>
+        </li>
+    `
+        : "";
+
+    orderItemsElement.innerHTML = itemsHtml + shippingHtml;
+    totalElement.textContent = formatPaymentPrice(
+        includeShipping ? getPaymentCartTotal() : getPaymentCartSubtotal()
+    );
+
+    if (shippingNoteElement) {
+        shippingNoteElement.textContent = shippingCost === 0
+            ? "Envío gratis incluido."
+            : `Se añadirán ${formatPaymentPrice(shippingCost)} de gastos de envío.`;
+    }
 }
 
 function updateMethodUI() {
@@ -114,6 +151,7 @@ function updateMethodUI() {
 
     continueButton.disabled = false;
     hideError();
+    renderSummary();
 }
 
 async function startCardCheckout() {
@@ -140,6 +178,7 @@ async function startCardCheckout() {
             },
             body: JSON.stringify({
                 items: getPaymentCartLineItems(),
+                shippingDestination: getSelectedShippingDestination(),
                 successUrl,
                 cancelUrl
             })
@@ -180,16 +219,26 @@ function bindPaymentMethodEvents() {
         input.addEventListener("change", updateMethodUI);
     });
 
+    document.querySelectorAll('input[name="shipping-destination"]').forEach((input) => {
+        input.addEventListener("change", renderSummary);
+    });
+
     document.querySelectorAll(".payment-option").forEach((option) => {
         option.addEventListener("click", () => {
-            const input = option.querySelector('input[name="payment-method"]');
+            const methodInput = option.querySelector('input[name="payment-method"]');
+            const shippingInput = option.querySelector('input[name="shipping-destination"]');
+            const input = methodInput || shippingInput;
             if (!input) return;
 
             if (!input.checked) {
                 input.checked = true;
             }
 
-            updateMethodUI();
+            if (methodInput) {
+                updateMethodUI();
+            } else {
+                renderSummary();
+            }
         });
     });
 
@@ -201,6 +250,7 @@ function initPaymentPage() {
     errorElement = document.getElementById("payment-error");
     orderItemsElement = document.getElementById("payment-order-items");
     totalElement = document.getElementById("payment-total");
+    shippingNoteElement = document.getElementById("payment-shipping-note");
     tarjetaDetails = document.getElementById("payment-details-tarjeta");
     offlineDetails = document.getElementById("payment-details-offline");
 

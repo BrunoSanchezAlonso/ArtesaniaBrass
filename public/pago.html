@@ -81,6 +81,27 @@
           Al continuar, te llevaremos a la pasarela segura de Stripe para
           pagar con tarjeta.
         </p>
+
+        <fieldset class="payment-shipping">
+          <legend>¿A dónde enviamos?</legend>
+          <label class="payment-option">
+            <input type="radio" name="shipping-destination" value="ES" checked>
+            <span class="payment-option-body">
+              <strong>España (incluidas islas)</strong>
+              <span>Envío gratis.</span>
+            </span>
+          </label>
+          <label class="payment-option">
+            <input type="radio" name="shipping-destination" value="INTL">
+            <span class="payment-option-body">
+              <strong>Fuera de España</strong>
+              <span>+5,00 € de gastos de envío.</span>
+            </span>
+          </label>
+        </fieldset>
+        <p id="payment-shipping-note" class="payment-contact-hint">
+          Envío gratis incluido.
+        </p>
       </section>
 
       <section id="payment-details-offline" class="payment-details hidden" hidden>
