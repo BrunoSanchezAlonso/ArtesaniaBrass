@@ -13,7 +13,7 @@
 //    Cuando pases a producción, usa pk_live_...
 // ============================================================
 
-const STRIPE_PUBLISHABLE_KEY = "pk_test_51TsBeRFIiiltxvuOsBGC47hncpNhgEufb1HpHIAtXooKrTABCniC03r65aW24s9Cg0tfZOUWTRwIQpasGkmSiElg00rszWn303";
+const STRIPE_PUBLISHABLE_KEY = "pk_live_51TsBeRFIiiltxvuOfgtLIO5vYnUZoc6xjxMCnL3jfXP6dd0mCf8c93keOLZviDyP9ruBLLTs1QeIbMvX7EYuDzTE00Dl7u1Q0q";
 
 const CHECKOUT_FUNCTION_NAME = "create-checkout-session";
 
