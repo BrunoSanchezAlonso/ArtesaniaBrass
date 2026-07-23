@@ -43,9 +43,13 @@ serve(async (req) => {
       httpClient: Stripe.createFetchHttpClient(),
     });
 
+    // Solo sesiones recientes: evita resucitar pedidos borrados a propósito.
+    const createdAfter = Math.floor(Date.now() / 1000) - 2 * 60 * 60;
+
     const sessions = await stripe.checkout.sessions.list({
       limit: 30,
       status: "complete",
+      created: { gte: createdAfter },
     });
 
     const results: Array<{ sessionId: string; orderId: number | null; status: string }> = [];

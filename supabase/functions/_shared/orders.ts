@@ -525,11 +525,31 @@ export async function fulfillCheckoutSession(
   }
 
   const supabase = getSupabaseAdmin();
+
   const { data: existingOrder } = await supabase
     .from("pedidos")
     .select("id, email_enviado")
     .eq("stripe_session_id", session.id)
     .maybeSingle();
+
+  // Si ya se cumplió esta sesión y el pedido se borró, no recrear ni reenviar mails.
+  const { data: processedSession, error: processedLookupError } = await supabase
+    .from("stripe_checkout_sesiones")
+    .select("session_id")
+    .eq("session_id", session.id)
+    .maybeSingle();
+
+  if (processedLookupError) {
+    console.error(
+      "No se pudo consultar stripe_checkout_sesiones:",
+      processedLookupError.message,
+    );
+  } else if (processedSession && !existingOrder) {
+    console.log(
+      `Sesión ${session.id} ya procesada y sin pedido: se omite (posible borrado manual).`,
+    );
+    return null;
+  }
 
   const listedItems = await stripe.checkout.sessions.listLineItems(session.id, {
     limit: 100,
@@ -634,6 +654,20 @@ export async function fulfillCheckoutSession(
   }
 
   const savedOrder = order as SavedOrder & { email_enviado: boolean };
+
+  const { error: sessionTrackError } = await supabase
+    .from("stripe_checkout_sesiones")
+    .upsert(
+      { session_id: session.id, pedido_id: savedOrder.id },
+      { onConflict: "session_id" },
+    );
+
+  if (sessionTrackError) {
+    console.error(
+      "No se pudo registrar la sesión Stripe procesada:",
+      sessionTrackError.message,
+    );
+  }
 
   if (!savedOrder.email_enviado) {
     // Reserva atómica: solo un fulfill concurrente (webhook + success + reconcile) envía mails.

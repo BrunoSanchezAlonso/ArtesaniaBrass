@@ -1,9 +1,6 @@
 import Stripe from "https://esm.sh/stripe@17.7.0?target=deno";
 import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
 import {
-  fulfillCheckoutSession,
-} from "../_shared/orders.ts";
-import {
   getSupabaseAdmin,
   parseCartQuantities,
   resolveCartItems,
@@ -107,45 +104,6 @@ serve(async (req) => {
       apiVersion: "2023-10-16",
       httpClient: Stripe.createFetchHttpClient(),
     });
-
-    // Respaldo: sincroniza pagos recientes (p. ej. Apple Pay si el webhook falló).
-    const reconcilePromise = (async () => {
-      try {
-        const recent = await stripe.checkout.sessions.list({
-          limit: 15,
-          status: "complete",
-        });
-        for (const recentSession of recent.data) {
-          if (recentSession.payment_status === "unpaid") continue;
-          try {
-            await fulfillCheckoutSession(stripe, recentSession.id);
-          } catch (reconcileError) {
-            console.error(
-              "Reconcile during checkout failed:",
-              reconcileError instanceof Error
-                ? reconcileError.message
-                : reconcileError,
-            );
-          }
-        }
-      } catch (reconcileError) {
-        console.error(
-          "Could not list sessions for reconcile:",
-          reconcileError instanceof Error
-            ? reconcileError.message
-            : reconcileError,
-        );
-      }
-    })();
-
-    // @ts-ignore EdgeRuntime exists on Supabase Edge
-    if (typeof EdgeRuntime !== "undefined" && EdgeRuntime.waitUntil) {
-      // @ts-ignore
-      EdgeRuntime.waitUntil(reconcilePromise);
-    } else {
-      // En local/tests, no bloqueamos la respuesta de checkout.
-      reconcilePromise.catch(() => {});
-    }
 
     const shipsToSpain = shippingDestination === "ES";
     const shippingOptions = shipsToSpain
