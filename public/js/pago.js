@@ -1,5 +1,4 @@
 const PAYMENT_CART_KEY = "artesanibrass-cart";
-const INTERNATIONAL_SHIPPING_EUR = 5;
 
 let paymentCart = [];
 let continueButton;
@@ -9,6 +8,8 @@ let totalElement;
 let shippingNoteElement;
 let tarjetaDetails;
 let offlineDetails;
+let zoneAutoElement;
+let zoneQuoteElement;
 
 function formatPaymentPrice(precio) {
     return `${Number(precio).toFixed(2).replace(".", ",")} €`;
@@ -74,19 +75,13 @@ function getPaymentCartSubtotal() {
     return paymentCart.reduce((total, item) => total + Number(item.price), 0);
 }
 
-function getSelectedShippingDestination() {
+function isAutoPayZone() {
     const selected = document.querySelector('input[name="shipping-destination"]:checked');
-    return selected?.value === "INTL" ? "INTL" : "ES";
+    return selected?.value !== "QUOTE";
 }
 
-function getShippingCost() {
-    return getSelectedShippingDestination() === "INTL"
-        ? INTERNATIONAL_SHIPPING_EUR
-        : 0;
-}
-
-function getPaymentCartTotal() {
-    return getPaymentCartSubtotal() + getShippingCost();
+function getSelectedShippingDestination() {
+    return isAutoPayZone() ? "ES" : "QUOTE";
 }
 
 function getPaymentCartLineItems() {
@@ -152,9 +147,7 @@ function hideError() {
 
 function renderSummary() {
     const lineItems = getPaymentCartLineItems();
-    const method = getSelectedMethod();
-    const includeShipping = method === "tarjeta";
-    const shippingCost = includeShipping ? getShippingCost() : 0;
+    const autoZone = isAutoPayZone();
     const itemsHtml = lineItems.map((item) => `
         <li class="order-summary-item">
             <div class="order-summary-item-main">
@@ -167,28 +160,37 @@ function renderSummary() {
         </li>
     `).join("");
 
-    const shippingHtml = includeShipping
+    const shippingHtml = autoZone
         ? `
         <li class="order-summary-item order-summary-shipping">
-            <span>Envío</span>
-            <span>${shippingCost === 0 ? "Gratis" : formatPaymentPrice(shippingCost)}</span>
+            <span>Envío (península y Baleares)</span>
+            <span>Gratis</span>
         </li>
     `
-        : "";
+        : `
+        <li class="order-summary-item order-summary-shipping">
+            <span>Envío</span>
+            <span>A calcular</span>
+        </li>
+    `;
 
     orderItemsElement.innerHTML = itemsHtml + shippingHtml;
-    totalElement.textContent = formatPaymentPrice(
-        includeShipping ? getPaymentCartTotal() : getPaymentCartSubtotal()
-    );
+    totalElement.textContent = autoZone
+        ? formatPaymentPrice(getPaymentCartSubtotal())
+        : `${formatPaymentPrice(getPaymentCartSubtotal())} + envío`;
 
     if (shippingNoteElement) {
-        shippingNoteElement.textContent = shippingCost === 0
-            ? "Envío gratis incluido."
-            : `Se añadirán ${formatPaymentPrice(shippingCost)} de gastos de envío.`;
+        shippingNoteElement.textContent = autoZone
+            ? "Envío gratis a península y Baleares."
+            : "El envío se calcula a mano según el destino.";
     }
 }
 
 function updateMethodUI() {
+    if (!isAutoPayZone()) {
+        return;
+    }
+
     const method = getSelectedMethod();
     const isOffline = method === "bizum" || method === "transferencia";
 
@@ -208,7 +210,26 @@ function updateMethodUI() {
     renderSummary();
 }
 
+function updateZoneUI() {
+    const autoZone = isAutoPayZone();
+
+    setHidden(zoneAutoElement, !autoZone);
+    setHidden(zoneQuoteElement, autoZone);
+
+    if (autoZone) {
+        updateMethodUI();
+    } else {
+        hideError();
+        renderSummary();
+    }
+}
+
 async function startCardCheckout() {
+    if (!isAutoPayZone()) {
+        showError("Para este destino necesitamos calcular el envío a mano. Escríbenos por email o Instagram.");
+        return;
+    }
+
     const checkoutUrl = typeof getCheckoutFunctionUrl === "function"
         ? getCheckoutFunctionUrl()
         : null;
@@ -232,7 +253,7 @@ async function startCardCheckout() {
             },
             body: JSON.stringify({
                 items: getPaymentCartLineItems(),
-                shippingDestination: getSelectedShippingDestination(),
+                shippingDestination: "ES",
                 successUrl,
                 cancelUrl
             })
@@ -258,6 +279,10 @@ async function handleContinue() {
         return;
     }
 
+    if (!isAutoPayZone()) {
+        return;
+    }
+
     const method = getSelectedMethod();
 
     if (method === "tarjeta") {
@@ -274,7 +299,7 @@ function bindPaymentMethodEvents() {
     });
 
     document.querySelectorAll('input[name="shipping-destination"]').forEach((input) => {
-        input.addEventListener("change", renderSummary);
+        input.addEventListener("change", updateZoneUI);
     });
 
     document.querySelectorAll(".payment-option").forEach((option) => {
@@ -288,10 +313,10 @@ function bindPaymentMethodEvents() {
                 input.checked = true;
             }
 
-            if (methodInput) {
+            if (shippingInput) {
+                updateZoneUI();
+            } else if (methodInput) {
                 updateMethodUI();
-            } else {
-                renderSummary();
             }
         });
     });
@@ -307,6 +332,8 @@ async function initPaymentPage() {
     shippingNoteElement = document.getElementById("payment-shipping-note");
     tarjetaDetails = document.getElementById("payment-details-tarjeta");
     offlineDetails = document.getElementById("payment-details-offline");
+    zoneAutoElement = document.getElementById("payment-zone-auto");
+    zoneQuoteElement = document.getElementById("payment-zone-quote");
 
     if (!continueButton || !orderItemsElement || !totalElement) {
         console.error("Faltan elementos de la página de pago.");
@@ -321,9 +348,8 @@ async function initPaymentPage() {
     }
 
     await enrichPaymentCartImages();
-    renderSummary();
     bindPaymentMethodEvents();
-    updateMethodUI();
+    updateZoneUI();
 }
 
 document.addEventListener("DOMContentLoaded", initPaymentPage);

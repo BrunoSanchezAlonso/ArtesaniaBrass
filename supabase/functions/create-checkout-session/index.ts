@@ -91,10 +91,13 @@ serve(async (req) => {
       ? body.successUrl
       : "";
     const cancelUrl = typeof body.cancelUrl === "string" ? body.cancelUrl : "";
-    // "ES" = envío gratis solo a España; "INTL" = 5 € y solo países fuera de ES
-    const shippingDestination = body.shippingDestination === "INTL"
-      ? "INTL"
-      : "ES";
+    // Solo península y Baleares: pago automático con envío gratis.
+    // INTL / otros destinos requieren presupuesto manual.
+    if (body.shippingDestination === "INTL" || body.shippingDestination === "QUOTE") {
+      throw new Error(
+        "Para Canarias, Ceuta, Melilla u otros países el envío se calcula a mano. Escríbenos para pedir presupuesto.",
+      );
+    }
 
     if (!isAllowedReturnUrl(successUrl) || !isAllowedReturnUrl(cancelUrl)) {
       throw new Error("URLs de retorno no válidas.");
@@ -105,40 +108,22 @@ serve(async (req) => {
       httpClient: Stripe.createFetchHttpClient(),
     });
 
-    const shipsToSpain = shippingDestination === "ES";
-    const shippingOptions = shipsToSpain
-      ? [
-        {
-          shipping_rate_data: {
-            type: "fixed_amount",
-            fixed_amount: {
-              amount: 0,
-              currency: "eur",
-            },
-            display_name: "Envío gratis (territorio español, incluidas islas)",
-            delivery_estimate: {
-              minimum: { unit: "business_day", value: 2 },
-              maximum: { unit: "business_day", value: 5 },
-            },
+    const shippingOptions = [
+      {
+        shipping_rate_data: {
+          type: "fixed_amount",
+          fixed_amount: {
+            amount: 0,
+            currency: "eur",
+          },
+          display_name: "Envío gratis (península y Baleares)",
+          delivery_estimate: {
+            minimum: { unit: "business_day", value: 2 },
+            maximum: { unit: "business_day", value: 5 },
           },
         },
-      ]
-      : [
-        {
-          shipping_rate_data: {
-            type: "fixed_amount",
-            fixed_amount: {
-              amount: 500,
-              currency: "eur",
-            },
-            display_name: "Envío fuera de España (5 €)",
-            delivery_estimate: {
-              minimum: { unit: "business_day", value: 4 },
-              maximum: { unit: "business_day", value: 10 },
-            },
-          },
-        },
-      ];
+      },
+    ];
 
     const session = await stripe.checkout.sessions.create({
       mode: "payment",
@@ -156,9 +141,7 @@ serve(async (req) => {
       success_url: successUrl,
       cancel_url: cancelUrl,
       shipping_address_collection: {
-        allowed_countries: shipsToSpain
-          ? ["ES"]
-          : ["PT", "FR", "DE", "IT", "AD"],
+        allowed_countries: ["ES"],
       },
       shipping_options: shippingOptions,
       phone_number_collection: {
@@ -167,7 +150,7 @@ serve(async (req) => {
       locale: "es",
       metadata: {
         source: "artesanibrass-web",
-        shipping_destination: shippingDestination,
+        shipping_destination: "ES",
       },
     });
 

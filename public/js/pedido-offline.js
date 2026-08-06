@@ -1,5 +1,4 @@
 const OFFLINE_CART_KEY = "artesanibrass-cart";
-const INTERNATIONAL_SHIPPING_EUR = 5;
 
 let offlineCart = [];
 let metodoPago = "bizum";
@@ -88,12 +87,11 @@ function getOfflineCartSubtotal() {
 }
 
 function getShippingCost() {
-    const country = addressCountrySelect?.value || "ES";
-    return country === "ES" ? 0 : INTERNATIONAL_SHIPPING_EUR;
+    return 0;
 }
 
 function getOfflineCartTotal() {
-    return getOfflineCartSubtotal() + getShippingCost();
+    return getOfflineCartSubtotal();
 }
 
 function getOfflineCartLineItems() {
@@ -131,7 +129,7 @@ function getShippingAddress() {
         postal_code: addressPostalInput.value.trim(),
         city: addressCityInput.value.trim(),
         state: addressStateInput.value.trim() || null,
-        country: addressCountrySelect.value
+        country: "ES"
     };
 }
 
@@ -173,18 +171,12 @@ function hideError() {
 }
 
 function updateShippingNote() {
-    const shippingCost = getShippingCost();
-
     if (!shippingNoteElement) return;
-
-    shippingNoteElement.textContent = shippingCost === 0
-        ? "Envío gratis incluido."
-        : `Se añadirán ${formatOfflinePrice(shippingCost)} de gastos de envío.`;
+    shippingNoteElement.textContent = "Envío gratis a península y Baleares.";
 }
 
 function renderSummary() {
     const lineItems = getOfflineCartLineItems();
-    const shippingCost = getShippingCost();
     const total = formatOfflinePrice(getOfflineCartTotal());
 
     const itemsHtml = lineItems.map((item) => `
@@ -201,8 +193,8 @@ function renderSummary() {
 
     const shippingHtml = `
         <li class="order-summary-item order-summary-shipping">
-            <span>Envío</span>
-            <span>${shippingCost === 0 ? "Gratis" : formatOfflinePrice(shippingCost)}</span>
+            <span>Envío (península y Baleares)</span>
+            <span>Gratis</span>
         </li>
     `;
 
@@ -324,12 +316,6 @@ function validateShippingAddress(address) {
         return false;
     }
 
-    if (!address.country) {
-        showError("Indica el país.");
-        addressCountrySelect.focus();
-        return false;
-    }
-
     return true;
 }
 
@@ -433,7 +419,6 @@ async function initOfflineOrderPage() {
     await enrichOfflineCartImages();
     applyMethodUI();
     renderSummary();
-    addressCountrySelect.addEventListener("change", renderSummary);
     confirmButton.addEventListener("click", confirmOfflineOrder);
 }
 

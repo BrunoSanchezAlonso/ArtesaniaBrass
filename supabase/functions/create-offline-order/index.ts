@@ -63,6 +63,12 @@ function validateShippingAddress(address: unknown) {
     throw new Error("Indica un país válido.");
   }
 
+  if (country !== "ES") {
+    throw new Error(
+      "El pago automático solo está disponible para península y Baleares. Para otros destinos, solicita presupuesto de envío.",
+    );
+  }
+
   return {
     line1,
     line2: line2 || null,
@@ -116,8 +122,8 @@ serve(async (req) => {
       (sum, item) => sum + item.price * item.quantity,
       0,
     );
-    const shippingCost = shippingAddress.country === "ES" ? 0 : 5;
-    const totalAmount = itemsTotal + shippingCost;
+    const shippingCost = 0;
+    const totalAmount = itemsTotal;
 
     const { data: insertedOrder, error: insertError } = await supabase
       .from("pedidos")
@@ -148,16 +154,6 @@ serve(async (req) => {
       cantidad: item.quantity,
     }));
 
-    if (shippingCost > 0) {
-      orderItems.push({
-        pedido_id: insertedOrder.id,
-        producto_id: null,
-        nombre: "Gastos de envío (fuera de España)",
-        precio_unitario: shippingCost,
-        cantidad: 1,
-      });
-    }
-
     const { error: itemsError } = await supabase
       .from("pedido_items")
       .insert(orderItems);
@@ -184,16 +180,7 @@ serve(async (req) => {
         nombre: item.name,
         precio_unitario: item.price,
         cantidad: item.quantity,
-      })).concat(
-        shippingCost > 0
-          ? [{
-            producto_id: null,
-            nombre: "Gastos de envío (fuera de España)",
-            precio_unitario: shippingCost,
-            cantidad: 1,
-          }]
-          : [],
-      ),
+      })),
     };
 
     await notifyOwnerNewOrder(pendingOrder);

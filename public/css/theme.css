@@ -1,0 +1,25 @@
+/* =========================
+    TEMA / COLORES DE MARCA
+    Cambia sobre todo --color-brand (y opcionalmente hover/tint)
+    para probar otro tono en toda la web.
+========================= */
+
+:root {
+    /* Marca */
+    --color-brand: #388074;
+    --color-brand-hover: #26574f;
+    --color-brand-soft: #388074;
+    --color-brand-tint: #e1f5f2;
+    --color-brand-muted: #388074;
+
+    /* Fondos y bordes cálidos */
+    --color-bg: #eef1f1;
+    --color-bg-warm: #e1f5f2;
+    --color-bg-soft: #e1f5f2;
+    --color-bg-mid: #e1f5f2;
+    --color-border: #388074;
+
+    /* Texto */
+    --color-text: #2c2c2c;
+    --color-text-muted: #666666;
+}
