@@ -29,6 +29,47 @@ function loadPaymentCart() {
     }
 }
 
+async function enrichPaymentCartImages() {
+    const missingIds = [...new Set(
+        paymentCart
+            .filter((item) => !item.image && item.productoId)
+            .map((item) => item.productoId)
+    )];
+
+    if (missingIds.length === 0 || !supabaseClient) {
+        return;
+    }
+
+    const { data, error } = await supabaseClient
+        .from("productos")
+        .select("id, imagen, alt")
+        .in("id", missingIds);
+
+    if (error || !data?.length) {
+        return;
+    }
+
+    const byId = Object.fromEntries(data.map((product) => [product.id, product]));
+    let changed = false;
+
+    paymentCart = paymentCart.map((item) => {
+        if (item.image || !item.productoId || !byId[item.productoId]?.imagen) {
+            return item;
+        }
+
+        changed = true;
+        return {
+            ...item,
+            image: byId[item.productoId].imagen,
+            alt: byId[item.productoId].alt || ""
+        };
+    });
+
+    if (changed) {
+        localStorage.setItem(PAYMENT_CART_KEY, JSON.stringify(paymentCart));
+    }
+}
+
 function getPaymentCartSubtotal() {
     return paymentCart.reduce((total, item) => total + Number(item.price), 0);
 }
@@ -59,8 +100,15 @@ function getPaymentCartLineItems() {
                 productId: item.productoId,
                 name: item.name,
                 price: item.price,
+                image: item.image || "",
+                alt: item.alt || "",
                 quantity: 0
             };
+        }
+
+        if (!grouped[key].image && item.image) {
+            grouped[key].image = item.image;
+            grouped[key].alt = item.alt || "";
         }
 
         grouped[key].quantity += 1;
@@ -108,15 +156,20 @@ function renderSummary() {
     const includeShipping = method === "tarjeta";
     const shippingCost = includeShipping ? getShippingCost() : 0;
     const itemsHtml = lineItems.map((item) => `
-        <li>
-            <span>${item.productId ? `#${item.productId} · ` : ""}${item.name}</span>
+        <li class="order-summary-item">
+            <div class="order-summary-item-main">
+                ${item.image
+                    ? `<img src="${item.image}" alt="${item.alt || ""}" class="order-summary-thumb" width="44" height="44" loading="lazy">`
+                    : ""}
+                <span>${item.productId ? `#${item.productId} · ` : ""}${item.name}</span>
+            </div>
             <span>${item.quantity} × ${formatPaymentPrice(item.price)}</span>
         </li>
     `).join("");
 
     const shippingHtml = includeShipping
         ? `
-        <li>
+        <li class="order-summary-item order-summary-shipping">
             <span>Envío</span>
             <span>${shippingCost === 0 ? "Gratis" : formatPaymentPrice(shippingCost)}</span>
         </li>
@@ -246,7 +299,7 @@ function bindPaymentMethodEvents() {
     continueButton.addEventListener("click", handleContinue);
 }
 
-function initPaymentPage() {
+async function initPaymentPage() {
     continueButton = document.getElementById("payment-continue");
     errorElement = document.getElementById("payment-error");
     orderItemsElement = document.getElementById("payment-order-items");
@@ -267,6 +320,7 @@ function initPaymentPage() {
         return;
     }
 
+    await enrichPaymentCartImages();
     renderSummary();
     bindPaymentMethodEvents();
     updateMethodUI();

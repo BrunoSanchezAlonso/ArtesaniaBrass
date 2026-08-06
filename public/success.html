@@ -51,10 +51,37 @@
       return item.nombre;
     }
 
-    function renderOrderSummary(order) {
+    async function loadProductImages(items) {
+      const productIds = [...new Set(
+        (items || [])
+          .map((item) => item.producto_id)
+          .filter((id) => Number.isFinite(Number(id)))
+      )];
+
+      if (productIds.length === 0 || !supabaseClient) {
+        return {};
+      }
+
+      const { data, error } = await supabaseClient
+        .from("productos")
+        .select("id, imagen, alt")
+        .in("id", productIds);
+
+      if (error || !data) {
+        console.warn("No se pudieron cargar imágenes del resumen:", error);
+        return {};
+      }
+
+      return Object.fromEntries(
+        data.map((product) => [product.id, { image: product.imagen, alt: product.alt || "" }])
+      );
+    }
+
+    async function renderOrderSummary(order) {
       const summary = document.getElementById("order-summary");
       const message = document.getElementById("success-message");
       const items = order.pedido_items ?? [];
+      const imagesByProductId = await loadProductImages(items);
 
       message.textContent = "Hemos recibido tu pedido correctamente. Te enviaremos un correo de confirmación y prepararemos tu joya artesanal con mucho cariño.";
 
@@ -64,12 +91,24 @@
         ${order.customer_email ? `<p><strong>Email:</strong> ${order.customer_email}</p>` : ""}
         <p><strong>Envío:</strong> ${formatAddress(order.shipping_address)}</p>
         <ul class="order-summary-list">
-          ${items.map((item) => `
-            <li>
-              ${formatOrderItemLabel(item)}
+          ${items.map((item) => {
+            const productImage = item.producto_id
+              ? imagesByProductId[item.producto_id]
+              : null;
+            const isShipping = !item.producto_id && /^env[ií]o$/i.test(item.nombre || "");
+
+            return `
+            <li class="order-summary-item${isShipping ? " order-summary-shipping" : ""}">
+              <div class="order-summary-item-main">
+                ${productImage?.image
+                  ? `<img src="${productImage.image}" alt="${productImage.alt}" class="order-summary-thumb" width="44" height="44" loading="lazy">`
+                  : ""}
+                <span>${formatOrderItemLabel(item)}</span>
+              </div>
               <span>${item.cantidad} × ${formatPrice(item.precio_unitario)}</span>
             </li>
-          `).join("")}
+          `;
+          }).join("")}
         </ul>
       `;
 
@@ -113,7 +152,7 @@
           const data = await response.json();
 
           if (response.ok && data.order) {
-            renderOrderSummary(data.order);
+            await renderOrderSummary(data.order);
             return;
           }
 

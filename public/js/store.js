@@ -104,6 +104,8 @@ function renderProducts() {
                     data-product-id="${producto.id}"
                     data-nombre="${producto.nombre}"
                     data-precio="${producto.precio}"
+                    data-imagen="${producto.imagen}"
+                    data-alt="${producto.alt || ""}"
                 >
                     Me lo pido!
                 </button>
@@ -145,7 +147,9 @@ function renderProducts() {
             addToCart(
                 Number(button.dataset.productId),
                 button.dataset.nombre,
-                parseFloat(button.dataset.precio)
+                parseFloat(button.dataset.precio),
+                button.dataset.imagen,
+                button.dataset.alt
             );
         });
     });
@@ -272,7 +276,7 @@ function openProductDetail(producto) {
 
     const addButton = document.getElementById("product-detail-add-to-cart");
     addButton.onclick = () => {
-        addToCart(producto.id, producto.nombre, producto.precio);
+        addToCart(producto.id, producto.nombre, producto.precio, producto.imagen, producto.alt);
         closeProductDetail();
     };
 
@@ -305,12 +309,44 @@ function initProductDetail() {
     });
 }
 
-function addToCart(productoId, productName, productPrice) {
+function enrichCartImagesFromProducts() {
+    if (!Array.isArray(productos) || productos.length === 0) {
+        return;
+    }
+
+    let changed = false;
+
+    cart = cart.map((item) => {
+        if (item.image || !item.productoId) {
+            return item;
+        }
+
+        const producto = productos.find((entry) => entry.id === item.productoId);
+        if (!producto?.imagen) {
+            return item;
+        }
+
+        changed = true;
+        return {
+            ...item,
+            image: producto.imagen,
+            alt: producto.alt || item.alt || ""
+        };
+    });
+
+    if (changed) {
+        saveCart();
+    }
+}
+
+function addToCart(productoId, productName, productPrice, productImage = "", productAlt = "") {
     cart.push({
         id: `${Date.now()}-${Math.random().toString(36).slice(2)}`,
         productoId,
         name: productName,
-        price: productPrice
+        price: productPrice,
+        image: productImage || "",
+        alt: productAlt || ""
     });
 
     saveCart();
@@ -347,6 +383,8 @@ function updateCart() {
         return;
     }
 
+    enrichCartImagesFromProducts();
+
     cartCountElement.textContent = cart.length;
     cartTotalElement.textContent = formatPrice(getCartTotal());
 
@@ -365,6 +403,9 @@ function updateCart() {
 
     cartItemsElement.innerHTML = cart.map((item) => `
         <div class="cart-item">
+            ${item.image
+                ? `<img src="${item.image}" alt="${item.alt || ""}" class="cart-item-thumb" width="48" height="48" loading="lazy">`
+                : `<span class="cart-item-thumb cart-item-thumb-placeholder" aria-hidden="true"></span>`}
             <div class="cart-item-info">
                 <span class="cart-item-name">${item.productoId ? `#${item.productoId} · ` : ""}${item.name}</span>
                 <span class="cart-item-price">${formatPrice(item.price)}</span>
