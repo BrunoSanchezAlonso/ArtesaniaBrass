@@ -3,8 +3,10 @@ let productos = [];
 let categoriaActiva = "Todos";
 let activeProductDetail = null;
 let activeGalleryIndex = 0;
+let productsExpanded = false;
 
 const CART_STORAGE_KEY = "artesanibrass-cart";
+const PRODUCTS_PREVIEW_LIMIT = 8;
 
 function formatPrice(precio) {
     return `${Number(precio).toFixed(2).replace(".", ",")} €`;
@@ -62,6 +64,7 @@ function getFilteredProducts() {
 
 function setActiveCategory(categoria) {
     categoriaActiva = categoria;
+    productsExpanded = false;
 
     document.querySelectorAll(".filter-button").forEach((button) => {
         button.classList.toggle("active", button.dataset.categoria === categoria);
@@ -72,6 +75,7 @@ function setActiveCategory(categoria) {
 
 function renderProducts() {
     const productsGrid = document.getElementById("products-grid");
+    const productsMore = document.getElementById("products-more");
     if (!productsGrid) return;
 
     const productosFiltrados = getFilteredProducts();
@@ -86,10 +90,22 @@ function renderProducts() {
                 ${mensaje}
             </p>
         `;
+        if (productsMore) {
+            productsMore.hidden = true;
+        }
         return;
     }
 
-    productsGrid.innerHTML = productosFiltrados.map((producto) => `
+    const hasMore = productosFiltrados.length > PRODUCTS_PREVIEW_LIMIT;
+    const productosVisibles = !productsExpanded && hasMore
+        ? productosFiltrados.slice(0, PRODUCTS_PREVIEW_LIMIT)
+        : productosFiltrados;
+
+    if (productsMore) {
+        productsMore.hidden = !hasMore || productsExpanded;
+    }
+
+    productsGrid.innerHTML = productosVisibles.map((producto) => `
         <article class="product-card" data-product-id="${producto.id}" role="button" tabindex="0" aria-label="Ver ${producto.nombre}">
             <div class="product-image-wrapper product-card-open">
                 <img src="${producto.imagen}" alt="${producto.alt}" class="product-image">
@@ -152,6 +168,16 @@ function renderProducts() {
                 button.dataset.alt
             );
         });
+    });
+}
+
+function initProductsMore() {
+    const moreButton = document.getElementById("products-more-button");
+    if (!moreButton) return;
+
+    moreButton.addEventListener("click", () => {
+        productsExpanded = true;
+        renderProducts();
     });
 }
 
@@ -539,6 +565,7 @@ async function initStore() {
     initCart();
     initFilters();
     initCategoryCards();
+    initProductsMore();
     initProductDetail();
     initCookieNotice();
     renderProducts();

@@ -270,6 +270,49 @@ nav a:hover {
     gap: 25px;
 }
 
+.products-more {
+    margin-top: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.products-more[hidden] {
+    display: none !important;
+}
+
+.products-more-button {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    width: 100%;
+    max-width: 420px;
+    padding: 0;
+    background: none;
+    color: var(--color-brand);
+    font-size: 0.95rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+.products-more-button::before,
+.products-more-button::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background: var(--color-brand-soft);
+}
+
+.products-more-button:hover {
+    color: var(--color-brand-hover);
+}
+
+.products-more-button:hover::before,
+.products-more-button:hover::after {
+    background: var(--color-brand);
+}
+
 .product-card {
     background-color: #fff;
     padding: 18px;
