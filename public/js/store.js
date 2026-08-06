@@ -108,7 +108,7 @@ function renderProducts() {
     productsGrid.innerHTML = productosVisibles.map((producto) => `
         <article class="product-card" data-product-id="${producto.id}" role="button" tabindex="0" aria-label="Ver ${producto.nombre}">
             <div class="product-image-wrapper product-card-open">
-                <img src="${producto.imagen}" alt="${producto.alt}" class="product-image">
+                <img src="${producto.imagen}" alt="${producto.alt}" class="product-image" loading="lazy" decoding="async">
             </div>
             <div class="product-info product-card-open">
                 <p class="product-id">Ref. #${producto.id}</p>
@@ -244,6 +244,8 @@ function setProductDetailImage(index) {
     activeGalleryIndex = index;
 
     const mainImage = document.getElementById("product-detail-main-image");
+    mainImage.loading = "eager";
+    mainImage.decoding = "async";
     mainImage.src = images[index];
     mainImage.alt = activeProductDetail.alt;
 
@@ -284,7 +286,7 @@ function openProductDetail(producto) {
                 data-index="${index}"
                 aria-label="Ver fotografía ${index + 1}"
             >
-                <img src="${url}" alt="">
+                <img src="${url}" alt="" loading="lazy" decoding="async">
             </button>
         `).join("");
 
