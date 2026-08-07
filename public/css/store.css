@@ -686,14 +686,19 @@ footer a:hover {
     top: 0;
     right: -400px;
     width: 360px;
+    /* 100vh en iOS/Android a menudo queda por debajo de la barra del navegador */
     height: 100vh;
+    height: 100dvh;
+    max-height: 100svh;
     background-color: #fff;
     box-shadow: -4px 0 14px rgba(0,0,0,0.15);
     z-index: 2000;
     transition: right 0.3s ease;
     padding: 25px;
+    padding-bottom: calc(25px + env(safe-area-inset-bottom, 0px));
     display: flex;
     flex-direction: column;
+    box-sizing: border-box;
 }
 
 .cart-sidebar.active {
@@ -705,6 +710,7 @@ footer a:hover {
     justify-content: space-between;
     align-items: center;
     margin-bottom: 25px;
+    flex-shrink: 0;
 }
 
 .close-cart {
@@ -714,8 +720,10 @@ footer a:hover {
 }
 
 .cart-items {
-    flex: 1;
+    flex: 1 1 auto;
+    min-height: 0;
     overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
     border-top: 1px solid #eee;
     border-bottom: 1px solid #eee;
     padding: 20px 0;
@@ -787,6 +795,7 @@ footer a:hover {
 .cart-footer {
     margin-top: auto;
     padding-top: 20px;
+    flex-shrink: 0;
 }
 
 .cart-total {
@@ -1801,6 +1810,7 @@ footer a:hover {
         width: 100%;
         right: -100%;
         padding: 18px;
+        padding-bottom: calc(18px + env(safe-area-inset-bottom, 0px));
     }
 
     .cart-item {
